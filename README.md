@@ -24,9 +24,9 @@ Download the files from the [Releases](https://github.com/HL-Spot-Bot/HL-Spot-Bo
 
 | File | System |
 |---|---|
-| `HL-Spot-1.0.1-prod-windows-x64.zip` | Windows (x86_64) |
-| `HL-Spot-1.0.1-prod-linux-x64.zip` | Linux (x86_64): Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer |
-| `HL-Spot-1.0.1-prod-docker-x64.tar.gz` | Docker image (x86_64) |
+| `HL-Spot-1.0.2-prod-windows-x64.zip` | Windows (x86_64) |
+| `HL-Spot-1.0.2-prod-linux-x64.zip` | Linux (x86_64): Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer |
+| `HL-Spot-1.0.2-prod-docker-x64.tar.gz` | Docker image (x86_64) |
 
 Each file comes with a `.sha256` file to check the download.
 
@@ -54,11 +54,11 @@ The same guide is available in the bot: menu **❓ Help** (`http://localhost:600
    - **Linux**: unzip, then run `./hl-spot` from the unzipped folder;
    - **Docker**:
      ```
-     docker load -i HL-Spot-1.0.1-prod-docker-x64.tar.gz
+     docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
      docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-            -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.1
+            -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
      ```
-   - **Flux** (decentralized cloud): image `olivier1246/hl-spot:1.0.1` — read section 16 of the
+   - **Flux** (decentralized cloud): image `olivier1246/hl-spot:1.0.2` — read section 16 of the
      user guide first (API wallet key security, required settings).
 3. **First launch**: create your account (7-day free trial).
 

@@ -1,6 +1,6 @@
 # HL-Spot — Guía del usuario
 
-Versión 1.0.1
+Versión 1.0.2
 
 HL-Spot es un bot de trading para **Hyperliquid**: mercados spot y perpetuos (perp), varios pares,
 órdenes automáticas y manuales. Se ejecuta **en su propio ordenador** (Windows, Linux o Docker) y
@@ -57,7 +57,7 @@ intacta.
 
 ### Windows
 
-1. Descomprima `HL-Spot-1.0.1-prod-windows-x64.zip`.
+1. Descomprima `HL-Spot-1.0.2-prod-windows-x64.zip`.
 2. En la carpeta descomprimida, ejecute **`HL-Spot.exe`**. Se abre una ventana de consola: manténgala
    abierta mientras el bot esté en funcionamiento.
 3. Abra **http://localhost:60000** en su navegador.
@@ -65,8 +65,8 @@ intacta.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 o posterior)
 
 ```
-unzip HL-Spot-1.0.1-prod-linux-x64.zip
-cd HL-Spot-1.0.1-prod-linux-x64
+unzip HL-Spot-1.0.2-prod-linux-x64.zip
+cd HL-Spot-1.0.2-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +75,9 @@ A continuación, abra **http://localhost:60000** en su navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.1-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.1
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
 ```
 
 - `-p 60000:60000` es necesario para acceder a la página web.
@@ -301,7 +301,7 @@ Sea cual sea el tipo, puede revocar el API wallet en Hyperliquid en cualquier mo
 
 | Campo de Flux | Valor |
 |---|---|
-| Imagen | `olivier1246/hl-spot:1.0.1` |
+| Imagen | `olivier1246/hl-spot:1.0.2` |
 | Puerto y puerto del contenedor | `60000` |
 | Datos del contenedor | `g:/data` (**obligatorio**) |
 | CPU | 0,2 |

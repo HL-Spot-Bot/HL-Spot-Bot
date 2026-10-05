@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.1
+版本 1.0.2
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -43,15 +43,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.1-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.2-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.1-prod-linux-x64.zip
-cd HL-Spot-1.0.1-prod-linux-x64
+unzip HL-Spot-1.0.2-prod-linux-x64.zip
+cd HL-Spot-1.0.2-prod-linux-x64
 ./hl-spot
 ```
 
@@ -60,9 +60,9 @@ cd HL-Spot-1.0.1-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.1-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.1
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -234,7 +234,7 @@ docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.1` |
+| 镜像 | `olivier1246/hl-spot:1.0.2` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
