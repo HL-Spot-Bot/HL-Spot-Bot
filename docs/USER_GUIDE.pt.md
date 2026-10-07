@@ -137,13 +137,13 @@ O menu no topo dá acesso a:
 
 | Página | Utilização |
 |---|---|
-| 📊 Painel | saldos, estado do mercado, estado de cada par |
+| 📊 Painel | saldos, estado do mercado, estado de cada ciclo spot |
 | 📈 Estatísticas | resultados dos ciclos spot e perp, por período |
-| 🧩 Pares negociados | pares spot e perp configurados para o bot |
+| 🧩 Pares negociados | pares spot e perp configurados para o bot, e as respetivas configurações |
 | 🟣 Ciclos perp | entradas, take-profits, stop-losses e fechamentos dos pares perp |
 | 🖐️ Ordens manuais | coloque uma ordem manualmente; o bot então acompanha o ciclo como os demais |
-| 🌐 Pares Hyperliquid | lista dos pares spot e perp da Hyperliquid |
-| ⚙️ Configurações | todas as configurações (aplicadas sem reiniciar, exceto a porta e o endereço de escuta) |
+| 🌐 Pares Hyperliquid | lista dos pares spot e perp da Hyperliquid; adicione aqui um par ao bot |
+| ⚙️ Configurações | configurações globais (aplicadas sem reiniciar, exceto a porta e o endereço de escuta) |
 | 📝 Log | erros (e avisos, se ativados) |
 | 🔑 Conta Hyperliquid | carteira, chave da API wallet, data de expiração |
 | 📜 Licença | licença, assinatura, pagamento, instalação, eliminação da conta |
@@ -154,6 +154,278 @@ disponíveis.
 
 Quando o bot deixa de negociar (licença terminada, API wallet expirada ou recusada), **não
 toca nas ordens e posições já abertas**: estas ficam sob a sua responsabilidade.
+
+As subsecções seguintes explicam como o bot decide e, depois, cada campo das páginas **Pares
+negociados** e **Configurações**.
+
+### 6.1 Análise de mercado: BULL, BEAR ou RANGE
+
+Antes de cada compra (spot) ou entrada (perp), o bot analisa **o próprio par**, com as velas
+desse par:
+
+1. Obtém as últimas **Número de velas obtidas** velas (configuração `LIMIT`) do
+   **Intervalo das velas** do par (vazio = a configuração global **Intervalo das velas**).
+2. O **preço atual** é o fecho da vela mais recente.
+3. Calcula três médias móveis dos fechos: **MA4**, **MA8** e **MA12** (o respetivo
+   número de velas é definido em **Configurações → Análise de mercado**).
+4. Decide o tipo de mercado, por esta ordem:
+   - **RANGE** se a MA12 estiver plana: nos últimos **Períodos da MA12 verificados**, a MA12
+     variou no máximo **Limite RANGE da MA12 (%)** entre o seu valor mais baixo e o mais alto;
+   - caso contrário, **BULL** se MA4 > MA8 > MA12;
+   - caso contrário, **BEAR** se MA4 < MA8 < MA12;
+   - caso contrário, **RANGE**.
+5. Calcula também o **range**: o fecho mais alto e o mais baixo nas últimas
+   **RANGE - períodos do range** velas. A sua amplitude é máximo − mínimo.
+
+Cada par usa então **as suas próprias configurações para o tipo de mercado detetado** (bloco
+BULL, BEAR ou RANGE do par). Se a análise falhar (Hyperliquid inacessível), nada é colocado
+e o bot tenta novamente na passagem seguinte.
+
+### 6.2 Ciclo spot, passo a passo
+
+Um ciclo spot é uma compra seguida de uma venda da mesma quantidade.
+
+1. **Quando.** O bot verifica cada par spot ativado a cada **Pausa curta do loop de compra (min)**.
+   É tentada uma compra quando:
+   - o par não está em pausa (ver passo 6);
+   - desde a tentativa anterior neste par, passou pelo menos o **menor** dos três valores de
+     **Intervalo entre compras (min)** do par (BULL, BEAR, RANGE), seja qual for o
+     mercado atual. A primeira tentativa após o arranque do bot aguarda **Atraso antes da primeira
+     compra (min)**.
+2. **Permitida?** As compras têm de estar ativadas globalmente (**Compras ativadas (global)**) **e** no
+   bloco do par correspondente ao mercado atual (**Compras ativadas**). Caso contrário, a tentativa conta, mas
+   nada é colocado.
+3. **Preços.** Com *P* = preço atual:
+   - preço de compra = *P* + **Offset de compra**; preço de venda alvo = *P* + **Offset de venda**;
+   - com a **Unidade do offset** `abs`, os offsets são em USDC; com `pct`, em % de *P*;
+   - **num mercado RANGE**, os offsets são **dinâmicos**: compra = *P* − *d*, venda = *P* + *d*,
+     com *d* = amplitude do range × **RANGE - % do range usado** / 100 / 2. Os offsets RANGE
+     estáticos do par só são usados se o range não puder ser calculado (amplitude 0).
+4. **Quantidade.** Montante = **% do saldo USDC** × o USDC **disponível** (não já retido por
+   ordens abertas). Quantidade = montante / preço de compra, arredondada **por defeito** ao passo de tamanho do
+   par. Se o valor da ordem for inferior a **Valor mínimo de ordem (USDC)** (pelo menos 10 USDC,
+   mínimo da Hyperliquid), a compra é recusada e o log mostra "Value too low".
+5. **Ordem.** É colocada uma ordem de compra limit ao preço de compra. O ciclo aparece no
+   Painel como **Compra pendente**, com o preço de venda alvo já registado.
+6. **Pausa.** Após cada tentativa, colocada ou não, o par aguarda **Pausa após tentativa
+   (min)** do bloco do mercado atual.
+7. **Compra executada.** O bot sabe-o pelo histórico da Hyperliquid, obtido a cada
+   **Intervalo de busca na Hyperliquid (min)**. O ciclo passa a **Venda pendente**. Uma compra
+   parcialmente executada que ainda está aberta permanece **Compra pendente**.
+8. **Venda.** O loop de venda (a cada **Intervalo do loop de venda (s)**) coloca uma ordem de venda limit ao
+   **preço de venda alvo registado no passo 3**. Vende a quantidade efetivamente recebida:
+   a Hyperliquid cobra a taxa de compra no token comprado, pelo que o bot vende a quantidade comprada
+   menos essa taxa, arredondada por defeito ao passo de tamanho. Pode ficar um pequeno resto na sua carteira;
+   um ciclo posterior vende-o quando o saldo o permitir.
+   - O preço de venda não é recalculado. Se o mercado já estiver acima dele, a venda é
+     executada imediatamente ao preço de mercado (melhor do que o previsto).
+   - Se o saldo não for suficiente, o bot tenta novamente; após 3 tentativas, o problema é
+     registado como **erro** no log.
+9. **Venda executada.** O ciclo passa a **Concluído**. O lucro é calculado com o preço e a
+   quantidade de venda reais e as taxas reais: quantidade vendida × (preço de venda − preço de compra) − taxa
+   de compra − taxa de venda.
+
+Os interruptores **Vendas ativadas** não têm atualmente qualquer efeito: assim que uma compra é executada, a respetiva venda é
+sempre colocada.
+
+**Exemplo prático (RANGE).** Preço atual 85 000; nas últimas 20 velas, o fecho mais alto
+é 85 200 e o mais baixo 84 770: amplitude 430. Com **RANGE - % do range usado** =
+75: *d* = 430 × 75 / 100 / 2 = 161,25. Compra a 85 000 − 161,25 = 84 838,75; venda alvo a
+85 000 + 161,25 = 85 161,25. Com **% do saldo USDC** = 5 e 400 USDC disponíveis: 20 USDC,
+ou seja 20 / 84 838,75 = 0,0002357 do token base, arredondado por defeito ao passo de tamanho do par.
+
+### 6.3 Ciclo perp, passo a passo
+
+Um ciclo perp é uma entrada (long ou short) e, depois, uma saída por take-profit, stop-loss ou fecho.
+
+1. **Quando.** As mesmas regras que no spot: cada par perp ativado é verificado a cada **Pausa curta do
+   loop de compra (min)**; pausa após cada tentativa (**Pausa após tentativa (min)** do bloco do mercado
+   atual) e o menor dos três **Intervalo entre entradas (min)**.
+2. **Antes de qualquer entrada, em cada passagem**, o bot aplica a **Direção** atual aos ciclos
+   já abertos no par:
+   - direção **none**: as entradas ainda não executadas são canceladas; as posições abertas seguem
+     **Direção definida como "nenhuma" com uma posição aberta** (`keep_tp_sl` = manter o take-profit
+     e o stop-loss; `close_market` / `close_limit` = fechar a posição);
+   - direção **oposta** a um ciclo aberto (por exemplo `short` com um long aberto):
+     uma entrada ainda não executada é cancelada, uma posição aberta é fechada de acordo com **Fechar
+     em uma reversão** (`market` = ordem a mercado; `limit` = ordem limit ao preço atual).
+3. **Que lado.** `long` ou `short`: esse lado. `none`: nenhuma entrada. `both`: de acordo com
+   **Regra da direção "both"**:
+   - `first_filled`: são colocadas uma entrada long e uma entrada short; a primeira executada cancela a
+     outra;
+   - `range_position`: long se o preço estiver na metade inferior do range, short na
+     metade superior; fora de um mercado RANGE, nenhuma entrada;
+   - `alternate`: o lado oposto ao do ciclo anterior do par.
+4. **Filtro de funding.** Nenhum long se a taxa de funding for superior a +**Limite de funding (%)**; nenhum
+   short se for inferior a −limite. Se o funding não estiver disponível, nenhuma entrada.
+5. **Alavancagem e margem.** Se necessário, o bot define a **Alavancagem** e o **Modo de
+   margem** do par na Hyperliquid antes da entrada.
+6. **Preços e tamanho.** Com *P* = preço atual: entrada = *P* + offset de entrada do lado, take-
+   profit = *P* + offset de take-profit do lado (USDC ou % de acordo com **Unidade do offset**).
+   Margem usada = **% da margem disponível** × margem disponível; tamanho = margem × alavancagem
+   / preço de entrada, arredondado por defeito.
+7. **Entrada.** Ordem limit ao preço de entrada. Quando é executada, o bot coloca um
+   **take-profit** (limit, reduce-only) ao preço registado e um **stop-loss** (stop
+   market, reduce-only) a **Stop-loss (% do preço de entrada)** do preço de entrada real.
+8. **Saída.** O ciclo termina quando o take-profit, o stop-loss ou um fecho é executado. As ordens market e
+   stop market aceitam um desvio de, no máximo, **Slippage das ordens market (%)**.
+
+Acompanhe os ciclos perp na página **🟣 Ciclos perp**.
+
+### 6.4 Página Pares negociados
+
+A página **🧩 Pares negociados** lista os pares configurados para o bot.
+
+- **Adicionar um par**: em **🌐 Pares Hyperliquid**, clique em **Adicionar** na linha do par. Um novo par fica
+  **desativado**; as suas configurações spot são pré-preenchidas com os padrões BULL / BEAR / RANGE da
+  página **Configurações**. As configurações perp têm de ser introduzidas.
+- **Editar**: abre as configurações do par: uma parte geral e, depois, um bloco por tipo de mercado
+  (BULL, BEAR, RANGE). **Salvar** verifica cada valor; os campos incorretos ficam destacados.
+- Coluna **Configuração**: **completo**, ou o número de campos **a completar**. Um par
+  só pode ser ativado quando estiver completo.
+- **Ativar / Desativar**: só os pares ativados e completos são negociados. Só os pares spot
+  cotados em USDC podem ser ativados. Um par desativado não coloca nenhuma nova entrada, mas **os seus ciclos abertos continuam
+  até fecharem**.
+- **Excluir**: só é possível quando o par não tem nenhum ciclo em curso. Desative-o primeiro e
+  aguarde que os seus ciclos terminem.
+- As alterações aplicam-se na passagem seguinte do loop em causa, sem reiniciar.
+
+**Offsets** — preço de compra ou de entrada = preço atual + offset; preço de venda ou de take-profit =
+preço atual + offset. Um offset negativo fica abaixo do preço atual.
+
+#### Configurações dos pares spot
+
+Parte geral:
+
+| Campo | Significado |
+|---|---|
+| Unidade do offset | `abs` = offsets em USDC; `pct` = offsets em % do preço atual |
+| Intervalo das velas | velas da análise de mercado deste par; vazio = **Intervalo das velas** global |
+| RANGE - % do range usado | offsets dinâmicos em RANGE = ± (amplitude do range × esta %) / 2 |
+
+Um bloco para BULL, um para BEAR, um para RANGE:
+
+| Campo | Significado |
+|---|---|
+| Compras ativadas | compras permitidas quando este tipo de mercado é detetado |
+| Vendas ativadas | atualmente sem efeito: as vendas são sempre colocadas |
+| Offset de compra | preço de compra = preço atual + este offset (normalmente negativo); em RANGE, substituído pelo offset dinâmico |
+| Offset de venda | preço de venda alvo = preço atual + este offset; em RANGE, substituído pelo offset dinâmico |
+| % do saldo USDC | parte do USDC disponível usada em cada compra |
+| Pausa após tentativa (min) | espera após cada tentativa de compra neste mercado |
+| Intervalo entre compras (min) | tempo mínimo entre duas tentativas de compra; é usado o menor dos três blocos |
+
+#### Configurações dos pares perp
+
+Parte geral:
+
+| Campo | Significado |
+|---|---|
+| Unidade do offset | `abs` = USDC; `pct` = % do preço atual |
+| Intervalo das velas | como no spot |
+| Alavancagem | limitada à alavancagem máxima do ativo |
+| Modo de margem | `cross` ou `isolated` (alguns ativos exigem `isolated`) |
+| Stop-loss (% do preço de entrada) | ordem stop market a esta % do preço de entrada real |
+| Limite de funding (%) | nenhum long se funding > +limite; nenhum short se funding < −limite |
+| Slippage das ordens market (%) | desvio máximo aceite nas ordens market e stop market |
+| Regra da direção "both" | `first_filled`, `range_position` ou `alternate` (ver 6.3); obrigatória assim que um bloco usa `both` |
+| Fechar em uma reversão | `market` ou `limit` |
+| Direção definida como "nenhuma" com uma posição aberta | `keep_tp_sl`, `close_market` ou `close_limit` |
+
+Um bloco para BULL, um para BEAR, um para RANGE:
+
+| Campo | Significado |
+|---|---|
+| Direção | `long`, `short`, `both` ou `none` (nenhuma entrada) |
+| Offset de entrada Long / Offset de take-profit Long | o take-profit tem de estar acima da entrada |
+| Offset de entrada Short / Offset de take-profit Short | o take-profit tem de estar abaixo da entrada |
+| % da margem disponível | parte da margem disponível usada em cada entrada, igual para long e short |
+| Pausa após tentativa (min) | espera após cada tentativa de entrada neste mercado |
+| Intervalo entre entradas (min) | tempo mínimo entre duas tentativas de entrada; é usado o menor dos três blocos |
+
+### 6.5 Página Configurações
+
+**⚙️ Configurações** contém as configurações globais. Um valor alterado aqui é guardado e aplicado
+imediatamente (porta e endereço de escuta: no próximo reinício). **Valor padrão** repõe
+o valor original. O endereço da carteira e a chave da API wallet não são definidos aqui (página
+**🔑 Conta Hyperliquid**).
+
+**Modo de operação**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Modo simulação (DRY_RUN) | não | o bot lê a Hyperliquid normalmente, mas não envia nenhuma ordem nem regista nenhum ciclo |
+
+**Análise de mercado** — comum a todos os pares (ver 6.1)
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Intervalo das velas | 1h | velas usadas quando um par não tem intervalo de velas próprio |
+| Período da MA4 / Período da MA8 / Período da MA12 | 4 / 8 / 12 | número de velas de cada média móvel |
+| Limite RANGE da MA12 (%) | 0,25 | variação máxima da MA12 para detetar um mercado RANGE |
+| Períodos da MA12 verificados | 5 | número de períodos ao longo dos quais a MA12 é verificada |
+| Número de velas obtidas | 100 | tem de cobrir o maior período usado (MA12 + períodos verificados, períodos do range) |
+
+**Ativação das ordens**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Compras ativadas (global) | sim | interruptor geral: desligado = nenhuma compra em nenhum par spot |
+| Compras em BULL / BEAR / RANGE | sim / não / sim | valor padrão para os novos pares spot |
+| Vendas ativadas (global), Vendas em BULL / BEAR / RANGE | — | atualmente sem efeito |
+
+**Mercado BULL / BEAR / RANGE — padrões para novos pares spot**: offsets de compra e de venda (USDC),
+% do saldo USDC, pausa após uma tentativa, intervalo entre compras. Pré-preenchem um par spot
+quando é adicionado; **alterá-los não altera os pares já adicionados**. O bloco RANGE
+contém também:
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| RANGE - períodos do range | 20 | número de velas usadas para o máximo e o mínimo do range (todos os pares) |
+| RANGE - % do range usado | 75 | valor padrão para os novos pares spot |
+
+Padrões: BULL compra 0 / venda +1000, 3 %, pausa 10 min, intervalo 360 min; BEAR compra −1000 /
+venda 0, 3 %, pausa 10 min, intervalo 360 min; RANGE compra −400 / venda +400, 5 %, pausa 10 min,
+intervalo 180 min.
+
+**Ordens e taxas**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Valor mínimo de ordem (USDC) | 10 | as ordens mais pequenas não são colocadas (mínimo da Hyperliquid: 10) |
+| Taxa maker (%) | 0,04 | usada apenas quando faltam as taxas reais de uma transação |
+| Taxa taker (%) | 0,07 | estimativa da taxa para as ordens market e stop market |
+
+**Tempo e sincronização**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Intervalo de busca na Hyperliquid (min) | 10 | frequência com que as ordens abertas, as execuções e o histórico são obtidos: uma execução é vista, no máximo, este tempo após ocorrer |
+| Atraso antes da primeira compra (min) | 0 | após o arranque do bot; aplicado no próximo arranque |
+| Pausa curta do loop de compra (min) | 1 | espera entre duas verificações do intervalo de compra, e após um erro |
+| Intervalo do loop de venda (s) | 120 | espera entre duas passagens do loop de venda |
+
+**Notificações Telegram** — ver secção 9.
+
+**Interface web**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Idioma | English | idioma da interface web e das mensagens Telegram |
+| Tema | Escuro | apresentação escura ou clara |
+| Endereço de escuta | 0.0.0.0 | 0.0.0.0 = acessível a partir da rede local; 127.0.0.1 = apenas este computador (reinício) |
+| Porta da interface web | 60000 | aplicada no reinício |
+| Cache da lista de pares (s) | 43200 | a lista de pares da Hyperliquid é mantida durante 12 h e atualizada em segundo plano |
+| Atraso entre requisições do catálogo (ms) | 150 | pausa entre dois pedidos ao carregar a lista de pares |
+| Duração da sessão (h) | 12 | aplica-se aos próximos inícios de sessão |
+| Logins falhos antes do bloqueio | 5 | por endereço IP |
+| Duração do bloqueio (min) | 15 | |
+
+**Ficheiro de log**
+
+| Configuração | Padrão | Significado |
+|---|---|---|
+| Registar os avisos | não | os erros são sempre registados; os avisos só se ativados (secção 12) |
 
 ## 7. Licença e assinatura
 

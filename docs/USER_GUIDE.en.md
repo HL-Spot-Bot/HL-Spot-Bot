@@ -137,13 +137,13 @@ The menu at the top gives access to:
 
 | Page | Use |
 |---|---|
-| 📊 Dashboard | balances, market status, state of each pair |
+| 📊 Dashboard | balances, market status, state of each spot cycle |
 | 📈 Statistics | spot and perp cycle results, by period |
-| 🧩 Traded pairs | spot and perp pairs configured for the bot |
+| 🧩 Traded pairs | spot and perp pairs configured for the bot, and their settings |
 | 🟣 Perp cycles | entries, take-profits, stop-losses and closes of perp pairs |
 | 🖐️ Manual orders | place an order by hand; the bot then follows the cycle like the others |
-| 🌐 Hyperliquid pairs | list of Hyperliquid spot and perp pairs |
-| ⚙️ Settings | all settings (applied without restart, except port and listening address) |
+| 🌐 Hyperliquid pairs | list of Hyperliquid spot and perp pairs; add a pair to the bot from here |
+| ⚙️ Settings | global settings (applied without restart, except port and listening address) |
 | 📝 Log | errors (and warnings if enabled) |
 | 🔑 Hyperliquid account | wallet, API wallet key, expiry date |
 | 📜 License | license, subscription, payment, installation, account deletion |
@@ -154,6 +154,278 @@ available.
 
 When the bot stops trading (license ended, API wallet expired or refused), it **does not
 touch orders and positions already open**: they remain your responsibility.
+
+The following subsections explain how the bot decides, then every field of the **Traded
+pairs** and **Settings** pages.
+
+### 6.1 Market analysis: BULL, BEAR or RANGE
+
+Before each buy (spot) or entry (perp), the bot analyses **the pair itself**, on the candles
+of that pair:
+
+1. It fetches the last **Number of candles fetched** candles (setting `LIMIT`) of the
+   pair's **Candle interval** (empty = the global **Candle interval** setting).
+2. The **current price** is the close of the most recent candle.
+3. It computes three moving averages of the closes: **MA4**, **MA8** and **MA12** (their
+   number of candles is set in **Settings → Market analysis**).
+4. It decides the market type, in this order:
+   - **RANGE** if the MA12 is flat: over the last **MA12 periods checked**, the MA12 has
+     moved by at most **MA12 RANGE threshold (%)** between its lowest and highest value;
+   - otherwise **BULL** if MA4 > MA8 > MA12;
+   - otherwise **BEAR** if MA4 < MA8 < MA12;
+   - otherwise **RANGE**.
+5. It also computes the **range**: the highest and lowest close over the last
+   **RANGE - range periods** candles. Its amplitude is high − low.
+
+Each pair then uses **its own settings for the detected market type** (BULL, BEAR or
+RANGE block of the pair). If the analysis fails (Hyperliquid unreachable), nothing is placed
+and the bot tries again at the next pass.
+
+### 6.2 Spot cycle, step by step
+
+A spot cycle is one buy followed by one sell of the same quantity.
+
+1. **When.** The bot checks each enabled spot pair every **Short pause of the buy loop (min)**.
+   A buy is attempted when:
+   - the pair is not in a pause (see step 6);
+   - since the previous attempt on this pair, at least the **smallest** of the pair's three
+     **Interval between buys (min)** values (BULL, BEAR, RANGE) has passed, whatever the
+     current market. The first attempt after the bot starts waits for **Delay before the first
+     buy (min)**.
+2. **Allowed?** Buys must be enabled globally (**Buys enabled (global)**) **and** in the
+   pair's block of the current market (**Buys enabled**). If not, the attempt counts but
+   nothing is placed.
+3. **Prices.** With *P* = current price:
+   - buy price = *P* + **Buy offset**; target sell price = *P* + **Sell offset**;
+   - with the **Offset unit** `abs`, offsets are in USDC; with `pct`, in % of *P*;
+   - **in a RANGE market**, the offsets are **dynamic**: buy = *P* − *d*, sell = *P* + *d*,
+     with *d* = range amplitude × **RANGE - % of the range used** / 100 / 2. The static
+     RANGE offsets of the pair are used only if the range cannot be computed (amplitude 0).
+4. **Quantity.** Amount = **% of USDC balance** × the **available** USDC (not already held by
+   open orders). Quantity = amount / buy price, rounded **down** to the size step of the
+   pair. If the order value is below **Minimum order value (USDC)** (at least 10 USDC,
+   Hyperliquid minimum), the buy is refused and the log shows "Value too low".
+5. **Order.** A limit buy order is placed at the buy price. The cycle appears on the
+   Dashboard as **Pending buy**, with the target sell price already recorded.
+6. **Pause.** After every attempt, placed or not, the pair waits **Pause after attempt
+   (min)** of the current market block.
+7. **Buy filled.** The bot learns it from the Hyperliquid history, fetched every
+   **Hyperliquid fetch interval (min)**. The cycle becomes **Pending sell**. A partially
+   filled buy that is still open stays **Pending buy**.
+8. **Sell.** The sell loop (every **Sell loop interval (s)**) places a limit sell order at the
+   **target sell price recorded at step 3**. It sells the quantity actually received:
+   Hyperliquid takes the buy fee in the bought token, so the bot sells the bought quantity
+   minus that fee, rounded down to the size step. A small remainder may stay in your wallet;
+   a later cycle sells it when the balance allows.
+   - The sell price is not recalculated. If the market is already above it, the sell is
+     filled immediately at the market price (better than planned).
+   - If the balance is not enough, the bot tries again; after 3 attempts the problem is
+     written as an **error** in the log.
+9. **Sell filled.** The cycle becomes **Completed**. The profit is calculated with the real
+   sell price and quantity and the real fees: quantity sold × (sell price − buy price) − buy
+   fee − sell fee.
+
+The **Sells enabled** switches currently have no effect: once a buy is filled, its sell is
+always placed.
+
+**Worked example (RANGE).** Current price 85,000; over the last 20 candles the highest
+close is 85,200 and the lowest 84,770: amplitude 430. With **RANGE - % of the range used** =
+75: *d* = 430 × 75 / 100 / 2 = 161.25. Buy at 85,000 − 161.25 = 84,838.75; target sell at
+85,000 + 161.25 = 85,161.25. With **% of USDC balance** = 5 and 400 USDC available: 20 USDC,
+so 20 / 84,838.75 = 0.0002357 of the base token, rounded down to the pair's size step.
+
+### 6.3 Perp cycle, step by step
+
+A perp cycle is one entry (long or short), then an exit by take-profit, stop-loss or close.
+
+1. **When.** Same rules as spot: each enabled perp pair is checked every **Short pause of the
+   buy loop (min)**; pause after each attempt (**Pause after attempt (min)** of the current market
+   block) and smallest of the three **Interval between entries (min)**.
+2. **Before any entry, at every pass**, the bot applies the current **Direction** to the cycles
+   already open on the pair:
+   - direction **none**: entries not yet filled are cancelled; open positions follow
+     **Direction set to "none" with an open position** (`keep_tp_sl` = leave the take-profit
+     and stop-loss in place; `close_market` / `close_limit` = close the position);
+   - direction **opposite** to an open cycle (for example `short` while a long is open):
+     an entry not yet filled is cancelled, an open position is closed according to **Close
+     on a reversal** (`market` = market order; `limit` = limit order at the current price).
+3. **Which side.** `long` or `short`: that side. `none`: no entry. `both`: according to
+   **Rule of the "both" direction**:
+   - `first_filled`: a long entry and a short entry are placed; the first filled cancels the
+     other;
+   - `range_position`: long if the price is in the lower half of the range, short in the
+     upper half; outside a RANGE market, no entry;
+   - `alternate`: the opposite side of the pair's previous cycle.
+4. **Funding filter.** No long if the funding rate is above +**Funding threshold (%)**; no
+   short if it is below −threshold. If the funding is unavailable, no entry.
+5. **Leverage and margin.** If needed, the bot sets the pair's **Leverage** and **Margin
+   mode** on Hyperliquid before the entry.
+6. **Prices and size.** With *P* = current price: entry = *P* + entry offset of the side, take-
+   profit = *P* + take-profit offset of the side (USDC or % according to **Offset unit**).
+   Margin used = **% of the available margin** × available margin; size = margin × leverage
+   / entry price, rounded down.
+7. **Entry.** Limit order at the entry price. When it is filled, the bot places a
+   **take-profit** (limit, reduce-only) at the recorded price and a **stop-loss** (stop
+   market, reduce-only) at **Stop-loss (% of the entry price)** from the real entry price.
+8. **Exit.** The cycle ends when the take-profit, the stop-loss or a close is filled. Market and
+   stop market orders accept a deviation of at most **Slippage of market orders (%)**.
+
+Follow the perp cycles on the **🟣 Perp cycles** page.
+
+### 6.4 Traded pairs page
+
+The **🧩 Traded pairs** page lists the pairs configured for the bot.
+
+- **Add a pair**: on **🌐 Hyperliquid pairs**, click **Add** on the pair's line. A new pair is
+  **disabled**; its spot settings are pre-filled with the BULL / BEAR / RANGE defaults of the
+  **Settings** page. Perp settings must be entered.
+- **Edit**: opens the pair's settings: a general part, then one block per market type
+  (BULL, BEAR, RANGE). **Save** checks every value; wrong fields are highlighted.
+- **Configuration** column: **complete**, or the number of fields **to complete**. A pair
+  can be enabled only when it is complete.
+- **Enable / Disable**: only enabled and complete pairs are traded. Only USDC-quoted spot
+  pairs can be enabled. A disabled pair places no new entry, but **its open cycles continue
+  until they close**.
+- **Delete**: possible only when the pair has no cycle in progress. Disable it first and
+  wait for its cycles to end.
+- Changes apply at the next pass of the loop concerned, without restart.
+
+**Offsets** — buy or entry price = current price + offset; sell or take-profit price =
+current price + offset. A negative offset is below the current price.
+
+#### Spot pair settings
+
+General part:
+
+| Field | Meaning |
+|---|---|
+| Offset unit | `abs` = offsets in USDC; `pct` = offsets in % of the current price |
+| Candle interval | candles of the market analysis of this pair; empty = global **Candle interval** |
+| RANGE - % of the range used | dynamic offsets in RANGE = ± (range amplitude × this %) / 2 |
+
+One block for BULL, one for BEAR, one for RANGE:
+
+| Field | Meaning |
+|---|---|
+| Buys enabled | buys allowed when this market type is detected |
+| Sells enabled | currently no effect: sells are always placed |
+| Buy offset | buy price = current price + this offset (usually negative); in RANGE, replaced by the dynamic offset |
+| Sell offset | target sell price = current price + this offset; in RANGE, replaced by the dynamic offset |
+| % of USDC balance | share of the available USDC used for each buy |
+| Pause after attempt (min) | wait after each buy attempt in this market |
+| Interval between buys (min) | minimum time between two buy attempts; the smallest of the three blocks is used |
+
+#### Perp pair settings
+
+General part:
+
+| Field | Meaning |
+|---|---|
+| Offset unit | `abs` = USDC; `pct` = % of the current price |
+| Candle interval | as for spot |
+| Leverage | limited to the maximum leverage of the asset |
+| Margin mode | `cross` or `isolated` (some assets require `isolated`) |
+| Stop-loss (% of the entry price) | stop market order at this % of the real entry price |
+| Funding threshold (%) | no long if funding > +threshold; no short if funding < −threshold |
+| Slippage of market orders (%) | maximum deviation accepted on market and stop market orders |
+| Rule of the "both" direction | `first_filled`, `range_position` or `alternate` (see 6.3); required as soon as a block uses `both` |
+| Close on a reversal | `market` or `limit` |
+| Direction set to "none" with an open position | `keep_tp_sl`, `close_market` or `close_limit` |
+
+One block for BULL, one for BEAR, one for RANGE:
+
+| Field | Meaning |
+|---|---|
+| Direction | `long`, `short`, `both` or `none` (no entry) |
+| Long entry offset / Long take-profit offset | the take-profit must be above the entry |
+| Short entry offset / Short take-profit offset | the take-profit must be below the entry |
+| % of the available margin | share of the available margin used for each entry, same for long and short |
+| Pause after attempt (min) | wait after each entry attempt in this market |
+| Interval between entries (min) | minimum time between two entry attempts; the smallest of the three blocks is used |
+
+### 6.5 Settings page
+
+**⚙️ Settings** holds the global settings. A value changed here is saved and applied
+immediately (port and listening address: at the next restart). **Default value** goes back
+to the original value. The wallet address and the API wallet key are not set here (page
+**🔑 Hyperliquid account**).
+
+**Operating mode**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Simulation mode (DRY_RUN) | no | the bot reads Hyperliquid normally but sends no order and records no cycle |
+
+**Market analysis** — common to all pairs (see 6.1)
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Candle interval | 1h | candles used when a pair has no candle interval of its own |
+| MA4 period / MA8 period / MA12 period | 4 / 8 / 12 | number of candles of each moving average |
+| MA12 RANGE threshold (%) | 0.25 | maximum MA12 variation to detect a RANGE market |
+| MA12 periods checked | 5 | number of periods over which the MA12 is checked |
+| Number of candles fetched | 100 | must cover the largest period used (MA12 + periods checked, range periods) |
+
+**Order activation**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Buys enabled (global) | yes | master switch: off = no buy on any spot pair |
+| Buys in BULL / BEAR / RANGE | yes / no / yes | default value for new spot pairs |
+| Sells enabled (global), Sells in BULL / BEAR / RANGE | — | currently no effect |
+
+**BULL / BEAR / RANGE market — defaults for new spot pairs**: buy and sell offsets (USDC),
+% of USDC balance, pause after an attempt, interval between buys. They pre-fill a spot pair
+when it is added; **changing them does not change pairs already added**. The RANGE block
+also holds:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| RANGE - range periods | 20 | number of candles used for the high and low of the range (all pairs) |
+| RANGE - % of the range used | 75 | default value for new spot pairs |
+
+Defaults: BULL buy 0 / sell +1000, 3 %, pause 10 min, interval 360 min; BEAR buy −1000 /
+sell 0, 3 %, pause 10 min, interval 360 min; RANGE buy −400 / sell +400, 5 %, pause 10 min,
+interval 180 min.
+
+**Orders and fees**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Minimum order value (USDC) | 10 | smaller orders are not placed (Hyperliquid minimum: 10) |
+| Maker fee (%) | 0.04 | used only when the real fees of a trade are missing |
+| Taker fee (%) | 0.07 | fee estimate for market and stop market orders |
+
+**Timing and synchronization**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Hyperliquid fetch interval (min) | 10 | how often the open orders, fills and history are fetched: a fill is seen at most this long after it happens |
+| Delay before the first buy (min) | 0 | after the bot starts; applied at the next start |
+| Short pause of the buy loop (min) | 1 | wait between two checks of the buy interval, and after an error |
+| Sell loop interval (s) | 120 | wait between two passes of the sell loop |
+
+**Telegram notifications** — see section 9.
+
+**Web interface**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Language | English | language of the web interface and Telegram messages |
+| Theme | Dark | dark or light display |
+| Listening address | 0.0.0.0 | 0.0.0.0 = reachable from the local network; 127.0.0.1 = this computer only (restart) |
+| Web interface port | 60000 | applied at restart |
+| Pair list cache (s) | 43200 | the Hyperliquid pair list is kept 12 h and refreshed in the background |
+| Delay between catalog requests (ms) | 150 | pause between two requests when loading the pair list |
+| Session duration (h) | 12 | applies to the next logins |
+| Failed logins before lockout | 5 | per IP address |
+| Lockout duration (min) | 15 | |
+
+**Log file**
+
+| Setting | Default | Meaning |
+|---|---|---|
+| Record warnings | no | errors are always recorded; warnings only if enabled (section 12) |
 
 ## 7. License and subscription
 

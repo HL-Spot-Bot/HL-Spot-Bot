@@ -137,13 +137,13 @@ Das Menü oben bietet Zugriff auf:
 
 | Seite | Verwendung |
 |---|---|
-| 📊 Dashboard | Guthaben, Marktstatus, Zustand jedes Paares |
+| 📊 Dashboard | Guthaben, Marktstatus, Zustand jedes spot-Zyklus |
 | 📈 Statistiken | Ergebnisse der spot- und perp-Zyklen nach Zeitraum |
-| 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare |
+| 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare und ihre Einstellungen |
 | 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare |
 | 🖐️ Manuelle Orders | Platzieren Sie eine Order manuell; der Bot verfolgt den Zyklus dann wie die anderen |
-| 🌐 Hyperliquid-Paare | Liste der spot- und perp-Paare von Hyperliquid |
-| ⚙️ Einstellungen | alle Einstellungen (ohne Neustart übernommen, außer Port und Listen-Adresse) |
+| 🌐 Hyperliquid-Paare | Liste der spot- und perp-Paare von Hyperliquid; fügen Sie hier ein Paar zum Bot hinzu |
+| ⚙️ Einstellungen | globale Einstellungen (ohne Neustart übernommen, außer Port und Listen-Adresse) |
 | 📝 Log | Fehler (und Warnungen, falls aktiviert) |
 | 🔑 Hyperliquid-Konto | Wallet, Schlüssel des API wallet, Ablaufdatum |
 | 📜 Lizenz | Lizenz, Abonnement, Zahlung, Installation, Kontolöschung |
@@ -154,6 +154,278 @@ verfügbar.
 
 Wenn der Bot den Handel einstellt (Lizenz abgelaufen, API wallet abgelaufen oder abgelehnt), **lässt er bereits offene
 Orders und Positionen unberührt**: Sie liegen in Ihrer Verantwortung.
+
+Die folgenden Unterabschnitte erklären, wie der Bot entscheidet, und anschließend jedes Feld der Seiten **Gehandelte
+Paare** und **Einstellungen**.
+
+### 6.1 Marktanalyse: BULL, BEAR oder RANGE
+
+Vor jedem Kauf (spot) oder Einstieg (perp) analysiert der Bot **das Paar selbst**, anhand der Kerzen
+dieses Paares:
+
+1. Er ruft die letzten **Anzahl abgerufener Kerzen** Kerzen (Einstellung `LIMIT`) im
+   **Kerzenintervall** des Paares ab (leer = die globale Einstellung **Kerzenintervall**).
+2. Der **aktuelle Preis** ist der Schlusskurs der jüngsten Kerze.
+3. Er berechnet drei gleitende Durchschnitte der Schlusskurse: **MA4**, **MA8** und **MA12** (ihre
+   Kerzenanzahl wird unter **Einstellungen → Marktanalyse** festgelegt).
+4. Er bestimmt den Markttyp in dieser Reihenfolge:
+   - **RANGE**, wenn der MA12 flach ist: Über die letzten **Geprüfte MA12-Perioden** hat sich der MA12
+     zwischen seinem niedrigsten und höchsten Wert um höchstens **MA12 RANGE-Schwelle (%)** bewegt;
+   - andernfalls **BULL**, wenn MA4 > MA8 > MA12;
+   - andernfalls **BEAR**, wenn MA4 < MA8 < MA12;
+   - andernfalls **RANGE**.
+5. Er berechnet außerdem die **Range**: den höchsten und den niedrigsten Schlusskurs über die letzten
+   **RANGE - Range-Perioden** Kerzen. Ihre Spanne ist Hoch − Tief.
+
+Jedes Paar verwendet dann **seine eigenen Einstellungen für den erkannten Markttyp** (Block BULL, BEAR oder
+RANGE des Paares). Schlägt die Analyse fehl (Hyperliquid nicht erreichbar), wird nichts platziert
+und der Bot versucht es beim nächsten Durchlauf erneut.
+
+### 6.2 Spot-Zyklus Schritt für Schritt
+
+Ein spot-Zyklus besteht aus einem Kauf, gefolgt von einem Verkauf derselben Menge.
+
+1. **Wann.** Der Bot prüft jedes aktivierte spot-Paar alle **Kurze Pause der Kaufschleife (min)**.
+   Ein Kauf wird versucht, wenn:
+   - das Paar sich nicht in einer Pause befindet (siehe Schritt 6);
+   - seit dem vorherigen Versuch für dieses Paar mindestens der **kleinste** der drei Werte
+     **Intervall zwischen Käufen (min)** des Paares (BULL, BEAR, RANGE) vergangen ist, unabhängig vom
+     aktuellen Markt. Der erste Versuch nach dem Start des Bots wartet **Verzögerung vor dem ersten
+     Kauf (min)** ab.
+2. **Erlaubt?** Käufe müssen global (**Käufe aktiviert (global)**) **und** im
+   Block des aktuellen Marktes des Paares (**Käufe aktiviert**) aktiviert sein. Andernfalls zählt der Versuch, aber
+   es wird nichts platziert.
+3. **Preise.** Mit *P* = aktueller Preis:
+   - Kaufpreis = *P* + **Kauf-Offset**; Ziel-Verkaufspreis = *P* + **Verkaufs-Offset**;
+   - mit der **Offset-Einheit** `abs` sind die Offsets in USDC angegeben; mit `pct` in % von *P*;
+   - **in einem RANGE-Markt** sind die Offsets **dynamisch**: Kauf = *P* − *d*, Verkauf = *P* + *d*,
+     mit *d* = Range-Spanne × **RANGE - % der genutzten Range** / 100 / 2. Die statischen
+     RANGE-Offsets des Paares werden nur verwendet, wenn die Range nicht berechnet werden kann (Spanne 0).
+4. **Menge.** Betrag = **% des USDC-Guthabens** × das **verfügbare** USDC (nicht bereits durch
+   offene Orders gebunden). Menge = Betrag / Kaufpreis, **abgerundet** auf die Größenschrittweite des
+   Paares. Liegt der Orderwert unter **Mindestwert einer Order (USDC)** (mindestens 10 USDC,
+   Hyperliquid-Minimum), wird der Kauf abgelehnt und das Log zeigt „Value too low“.
+5. **Order.** Eine Limit-Kauforder wird zum Kaufpreis platziert. Der Zyklus erscheint im
+   Dashboard als **Kauf ausstehend**, mit dem bereits gespeicherten Ziel-Verkaufspreis.
+6. **Pause.** Nach jedem Versuch, ob platziert oder nicht, wartet das Paar **Pause nach einem Versuch
+   (min)** des Blocks des aktuellen Marktes.
+7. **Kauf ausgeführt.** Der Bot erfährt dies aus der Hyperliquid-Historie, die alle
+   **Hyperliquid-Abrufintervall (min)** abgerufen wird. Der Zyklus wechselt zu **Verkauf ausstehend**. Ein teilweise
+   ausgeführter Kauf, der noch offen ist, bleibt **Kauf ausstehend**.
+8. **Verkauf.** Die Verkaufsschleife (alle **Intervall der Verkaufsschleife (s)**) platziert eine Limit-Verkaufsorder zum
+   **in Schritt 3 gespeicherten Ziel-Verkaufspreis**. Sie verkauft die tatsächlich erhaltene Menge:
+   Hyperliquid zieht die Kaufgebühr im gekauften Token ab, daher verkauft der Bot die gekaufte Menge
+   abzüglich dieser Gebühr, abgerundet auf die Größenschrittweite. Ein kleiner Rest kann in Ihrer Wallet verbleiben;
+   ein späterer Zyklus verkauft ihn, sobald das Guthaben es erlaubt.
+   - Der Verkaufspreis wird nicht neu berechnet. Liegt der Markt bereits darüber, wird der Verkauf
+     sofort zum Marktpreis ausgeführt (besser als geplant).
+   - Reicht das Guthaben nicht aus, versucht es der Bot erneut; nach 3 Versuchen wird das Problem
+     als **Fehler** in das Log geschrieben.
+9. **Verkauf ausgeführt.** Der Zyklus wechselt zu **Abgeschlossen**. Der Gewinn wird mit dem tatsächlichen
+   Verkaufspreis, der tatsächlichen Menge und den tatsächlichen Gebühren berechnet: verkaufte Menge × (Verkaufspreis − Kaufpreis) −
+   Kaufgebühr − Verkaufsgebühr.
+
+Die Schalter **Verkäufe aktiviert** haben derzeit keine Wirkung: Sobald ein Kauf ausgeführt ist, wird sein Verkauf
+immer platziert.
+
+**Durchgerechnetes Beispiel (RANGE).** Aktueller Preis 85.000; über die letzten 20 Kerzen liegt der höchste
+Schlusskurs bei 85.200 und der niedrigste bei 84.770: Spanne 430. Mit **RANGE - % der genutzten Range** =
+75: *d* = 430 × 75 / 100 / 2 = 161,25. Kauf bei 85.000 − 161,25 = 84.838,75; Ziel-Verkauf bei
+85.000 + 161,25 = 85.161,25. Mit **% des USDC-Guthabens** = 5 und 400 verfügbaren USDC: 20 USDC,
+also 20 / 84.838,75 = 0,0002357 des Basis-Tokens, abgerundet auf die Größenschrittweite des Paares.
+
+### 6.3 Perp-Zyklus Schritt für Schritt
+
+Ein perp-Zyklus besteht aus einem Einstieg (long oder short) und anschließend einem Ausstieg per Take-Profit, Stop-Loss oder Schließung.
+
+1. **Wann.** Gleiche Regeln wie bei spot: Jedes aktivierte perp-Paar wird alle **Kurze Pause der
+   Kaufschleife (min)** geprüft; Pause nach jedem Versuch (**Pause nach einem Versuch (min)** des Blocks des aktuellen
+   Marktes) und der kleinste der drei Werte **Intervall zwischen Einstiegen (min)**.
+2. **Vor jedem Einstieg, bei jedem Durchlauf**, wendet der Bot die aktuelle **Richtung** auf die bereits
+   offenen Zyklen des Paares an:
+   - Richtung **none**: Noch nicht ausgeführte Einstiege werden storniert; offene Positionen folgen
+     **Richtung auf „none“ gesetzt bei offener Position** (`keep_tp_sl` = Take-Profit
+     und Stop-Loss bestehen lassen; `close_market` / `close_limit` = Position schließen);
+   - Richtung **entgegengesetzt** zu einem offenen Zyklus (zum Beispiel `short`, während ein Long offen ist):
+     Ein noch nicht ausgeführter Einstieg wird storniert, eine offene Position wird gemäß **Bei einer Umkehr
+     schließen** geschlossen (`market` = Market-Order; `limit` = Limit-Order zum aktuellen Preis).
+3. **Welche Seite.** `long` oder `short`: diese Seite. `none`: kein Einstieg. `both`: gemäß
+   **Regel der Richtung „both“**:
+   - `first_filled`: Ein Long-Einstieg und ein Short-Einstieg werden platziert; der zuerst ausgeführte storniert den
+     anderen;
+   - `range_position`: Long, wenn der Preis in der unteren Hälfte der Range liegt, Short in der
+     oberen Hälfte; außerhalb eines RANGE-Marktes kein Einstieg;
+   - `alternate`: die Gegenseite des vorherigen Zyklus des Paares.
+4. **Funding-Filter.** Kein Long, wenn die Funding-Rate über +**Funding-Schwelle (%)** liegt; kein
+   Short, wenn sie unter −Schwelle liegt. Ist das Funding nicht verfügbar, erfolgt kein Einstieg.
+5. **Hebel und Margin.** Falls nötig, setzt der Bot vor dem Einstieg den **Hebel** und den **Margin-Modus**
+   des Paares auf Hyperliquid.
+6. **Preise und Größe.** Mit *P* = aktueller Preis: Einstieg = *P* + Einstiegs-Offset der Seite,
+   Take-Profit = *P* + Take-Profit-Offset der Seite (USDC oder % gemäß **Offset-Einheit**).
+   Verwendete Margin = **% der verfügbaren Margin** × verfügbare Margin; Größe = Margin × Hebel
+   / Einstiegspreis, abgerundet.
+7. **Einstieg.** Limit-Order zum Einstiegspreis. Sobald sie ausgeführt ist, platziert der Bot einen
+   **Take-Profit** (Limit, reduce-only) zum gespeicherten Preis und einen **Stop-Loss** (Stop-Market,
+   reduce-only) bei **Stop-Loss (% des Einstiegspreises)** vom tatsächlichen Einstiegspreis.
+8. **Ausstieg.** Der Zyklus endet, wenn der Take-Profit, der Stop-Loss oder eine Schließung ausgeführt wird. Market- und
+   Stop-Market-Orders akzeptieren eine Abweichung von höchstens **Slippage von Market-Orders (%)**.
+
+Verfolgen Sie die perp-Zyklen auf der Seite **🟣 Perp-Zyklen**.
+
+### 6.4 Seite Gehandelte Paare
+
+Die Seite **🧩 Gehandelte Paare** listet die für den Bot konfigurierten Paare auf.
+
+- **Paar hinzufügen**: Klicken Sie auf **🌐 Hyperliquid-Paare** in der Zeile des Paares auf **Hinzufügen**. Ein neues Paar ist
+  **deaktiviert**; seine spot-Einstellungen sind mit den BULL- / BEAR- / RANGE-Standardwerten der Seite
+  **Einstellungen** vorausgefüllt. Die perp-Einstellungen müssen eingegeben werden.
+- **Bearbeiten**: öffnet die Einstellungen des Paares: einen allgemeinen Teil, dann einen Block pro Markttyp
+  (BULL, BEAR, RANGE). **Speichern** prüft jeden Wert; fehlerhafte Felder werden hervorgehoben.
+- Spalte **Konfiguration**: **vollständig** oder die Anzahl der Felder **zu vervollständigen**. Ein Paar
+  kann erst aktiviert werden, wenn es vollständig ist.
+- **Aktivieren / Deaktivieren**: Nur aktivierte und vollständige Paare werden gehandelt. Nur in USDC notierte
+  spot-Paare können aktiviert werden. Ein deaktiviertes Paar platziert keinen neuen Einstieg, aber **seine offenen Zyklen laufen weiter,
+  bis sie geschlossen sind**.
+- **Löschen**: nur möglich, wenn das Paar keinen laufenden Zyklus hat. Deaktivieren Sie es zuerst und
+  warten Sie, bis seine Zyklen beendet sind.
+- Änderungen werden beim nächsten Durchlauf der betreffenden Schleife ohne Neustart übernommen.
+
+**Offsets** — Kauf- oder Einstiegspreis = aktueller Preis + Offset; Verkaufs- oder Take-Profit-Preis =
+aktueller Preis + Offset. Ein negativer Offset liegt unter dem aktuellen Preis.
+
+#### Einstellungen eines spot-Paares
+
+Allgemeiner Teil:
+
+| Feld | Bedeutung |
+|---|---|
+| Offset-Einheit | `abs` = Offsets in USDC; `pct` = Offsets in % des aktuellen Preises |
+| Kerzenintervall | Kerzen der Marktanalyse dieses Paares; leer = globales **Kerzenintervall** |
+| RANGE - % der genutzten Range | dynamische Offsets in RANGE = ± (Range-Spanne × dieser %) / 2 |
+
+Ein Block für BULL, einer für BEAR, einer für RANGE:
+
+| Feld | Bedeutung |
+|---|---|
+| Käufe aktiviert | Käufe erlaubt, wenn dieser Markttyp erkannt wird |
+| Verkäufe aktiviert | derzeit ohne Wirkung: Verkäufe werden immer platziert |
+| Kauf-Offset | Kaufpreis = aktueller Preis + dieser Offset (normalerweise negativ); in RANGE durch den dynamischen Offset ersetzt |
+| Verkaufs-Offset | Ziel-Verkaufspreis = aktueller Preis + dieser Offset; in RANGE durch den dynamischen Offset ersetzt |
+| % des USDC-Guthabens | Anteil des verfügbaren USDC, der für jeden Kauf verwendet wird |
+| Pause nach einem Versuch (min) | Wartezeit nach jedem Kaufversuch in diesem Markt |
+| Intervall zwischen Käufen (min) | Mindestzeit zwischen zwei Kaufversuchen; der kleinste Wert der drei Blöcke wird verwendet |
+
+#### Einstellungen eines perp-Paares
+
+Allgemeiner Teil:
+
+| Feld | Bedeutung |
+|---|---|
+| Offset-Einheit | `abs` = USDC; `pct` = % des aktuellen Preises |
+| Kerzenintervall | wie bei spot |
+| Hebel | begrenzt auf den maximalen Hebel des Assets |
+| Margin-Modus | `cross` oder `isolated` (einige Assets erfordern `isolated`) |
+| Stop-Loss (% des Einstiegspreises) | Stop-Market-Order bei diesem % des tatsächlichen Einstiegspreises |
+| Funding-Schwelle (%) | kein Long, wenn Funding > +Schwelle; kein Short, wenn Funding < −Schwelle |
+| Slippage von Market-Orders (%) | maximal akzeptierte Abweichung bei Market- und Stop-Market-Orders |
+| Regel der Richtung „both“ | `first_filled`, `range_position` oder `alternate` (siehe 6.3); erforderlich, sobald ein Block `both` verwendet |
+| Bei einer Umkehr schließen | `market` oder `limit` |
+| Richtung auf „none“ gesetzt bei offener Position | `keep_tp_sl`, `close_market` oder `close_limit` |
+
+Ein Block für BULL, einer für BEAR, einer für RANGE:
+
+| Feld | Bedeutung |
+|---|---|
+| Richtung | `long`, `short`, `both` oder `none` (kein Einstieg) |
+| Long-Einstiegs-Offset / Long-Take-Profit-Offset | der Take-Profit muss über dem Einstieg liegen |
+| Short-Einstiegs-Offset / Short-Take-Profit-Offset | der Take-Profit muss unter dem Einstieg liegen |
+| % der verfügbaren Margin | Anteil der verfügbaren Margin, der für jeden Einstieg verwendet wird, gleich für Long und Short |
+| Pause nach einem Versuch (min) | Wartezeit nach jedem Einstiegsversuch in diesem Markt |
+| Intervall zwischen Einstiegen (min) | Mindestzeit zwischen zwei Einstiegsversuchen; der kleinste Wert der drei Blöcke wird verwendet |
+
+### 6.5 Seite Einstellungen
+
+**⚙️ Einstellungen** enthält die globalen Einstellungen. Ein hier geänderter Wert wird gespeichert und sofort
+übernommen (Port und Listen-Adresse: beim nächsten Neustart). **Standardwert** stellt den ursprünglichen
+Wert wieder her. Die Wallet-Adresse und der Schlüssel des API wallet werden nicht hier festgelegt (Seite
+**🔑 Hyperliquid-Konto**).
+
+**Betriebsmodus**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Simulationsmodus (DRY_RUN) | nein | der Bot liest Hyperliquid normal, sendet aber keine Order und speichert keinen Zyklus |
+
+**Marktanalyse** — gemeinsam für alle Paare (siehe 6.1)
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Kerzenintervall | 1h | Kerzen, die verwendet werden, wenn ein Paar kein eigenes Kerzenintervall hat |
+| MA4-Periode / MA8-Periode / MA12-Periode | 4 / 8 / 12 | Anzahl der Kerzen jedes gleitenden Durchschnitts |
+| MA12 RANGE-Schwelle (%) | 0,25 | maximale Veränderung des MA12, um einen RANGE-Markt zu erkennen |
+| Geprüfte MA12-Perioden | 5 | Anzahl der Perioden, über die der MA12 geprüft wird |
+| Anzahl abgerufener Kerzen | 100 | muss die größte verwendete Periode abdecken (MA12 + geprüfte Perioden, Range-Perioden) |
+
+**Order-Aktivierung**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Käufe aktiviert (global) | ja | Hauptschalter: aus = kein Kauf auf irgendeinem spot-Paar |
+| Käufe in BULL / BEAR / RANGE | ja / nein / ja | Standardwert für neue spot-Paare |
+| Verkäufe aktiviert (global), Verkäufe in BULL / BEAR / RANGE | — | derzeit ohne Wirkung |
+
+**BULL- / BEAR- / RANGE-Markt — Standardwerte für neue spot-Paare**: Kauf- und Verkaufs-Offsets (USDC),
+% des USDC-Guthabens, Pause nach einem Versuch, Intervall zwischen Käufen. Sie füllen ein spot-Paar vor,
+wenn es hinzugefügt wird; **ihre Änderung wirkt sich nicht auf bereits hinzugefügte Paare aus**. Der RANGE-Block
+enthält außerdem:
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| RANGE - Range-Perioden | 20 | Anzahl der Kerzen für Hoch und Tief der Range (alle Paare) |
+| RANGE - % der genutzten Range | 75 | Standardwert für neue spot-Paare |
+
+Standardwerte: BULL Kauf 0 / Verkauf +1000, 3 %, Pause 10 min, Intervall 360 min; BEAR Kauf −1000 /
+Verkauf 0, 3 %, Pause 10 min, Intervall 360 min; RANGE Kauf −400 / Verkauf +400, 5 %, Pause 10 min,
+Intervall 180 min.
+
+**Orders und Gebühren**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Mindestwert einer Order (USDC) | 10 | kleinere Orders werden nicht platziert (Hyperliquid-Minimum: 10) |
+| Maker-Gebühr (%) | 0,04 | nur verwendet, wenn die tatsächlichen Gebühren eines Trades fehlen |
+| Taker-Gebühr (%) | 0,07 | Gebührenschätzung für Market- und Stop-Market-Orders |
+
+**Timing und Synchronisierung**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Hyperliquid-Abrufintervall (min) | 10 | wie oft offene Orders, Ausführungen und Historie abgerufen werden: Eine Ausführung wird höchstens so lange nach ihrem Eintreten erkannt |
+| Verzögerung vor dem ersten Kauf (min) | 0 | nach dem Start des Bots; wird beim nächsten Start übernommen |
+| Kurze Pause der Kaufschleife (min) | 1 | Wartezeit zwischen zwei Prüfungen des Kaufintervalls und nach einem Fehler |
+| Intervall der Verkaufsschleife (s) | 120 | Wartezeit zwischen zwei Durchläufen der Verkaufsschleife |
+
+**Telegram-Benachrichtigungen** — siehe Abschnitt 9.
+
+**Web-Oberfläche**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Sprache | English | Sprache der Web-Oberfläche und der Telegram-Nachrichten |
+| Design | Dunkel | dunkle oder helle Darstellung |
+| Listen-Adresse | 0.0.0.0 | 0.0.0.0 = aus dem lokalen Netzwerk erreichbar; 127.0.0.1 = nur dieser Computer (Neustart) |
+| Port der Web-Oberfläche | 60000 | wird beim Neustart übernommen |
+| Cache der Paarliste (s) | 43200 | die Paarliste von Hyperliquid wird 12 h lang gespeichert und im Hintergrund aktualisiert |
+| Verzögerung zwischen Katalog-Anfragen (ms) | 150 | Pause zwischen zwei Anfragen beim Laden der Paarliste |
+| Sitzungsdauer (h) | 12 | gilt für die nächsten Anmeldungen |
+| Fehlgeschlagene Anmeldungen vor Sperre | 5 | pro IP-Adresse |
+| Sperrdauer (min) | 15 | |
+
+**Logdatei**
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| Warnungen aufzeichnen | nein | Fehler werden immer aufgezeichnet; Warnungen nur, wenn aktiviert (Abschnitt 12) |
 
 ## 7. Lizenz und Abonnement
 
