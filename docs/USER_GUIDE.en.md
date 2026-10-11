@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.0.2
+Version 1.0.3
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -57,7 +57,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.0.2-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.0.3-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -65,8 +65,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.0.2-prod-linux-x64.zip
-cd HL-Spot-1.0.2-prod-linux-x64
+unzip HL-Spot-1.0.3-prod-linux-x64.zip
+cd HL-Spot-1.0.3-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +75,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -137,7 +137,7 @@ The menu at the top gives access to:
 
 | Page | Use |
 |---|---|
-| 📊 Dashboard | balances, market status, state of each spot cycle |
+| 📊 Dashboard | one tab per spot pair: its cycles and its market status |
 | 📈 Statistics | spot and perp cycle results, by period |
 | 🧩 Traded pairs | spot and perp pairs configured for the bot, and their settings |
 | 🟣 Perp cycles | entries, take-profits, stop-losses and closes of perp pairs |
@@ -571,7 +571,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.2` |
+| Image | `olivier1246/hl-spot:1.0.3` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |

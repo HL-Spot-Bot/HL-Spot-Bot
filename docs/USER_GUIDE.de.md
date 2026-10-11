@@ -1,6 +1,6 @@
 # HL-Spot — Benutzerhandbuch
 
-Version 1.0.2
+Version 1.0.3
 
 HL-Spot ist ein Trading-Bot für **Hyperliquid**: spot- und Perpetual-Märkte (perp), mehrere Paare,
 automatische und manuelle Orders. Er läuft **auf Ihrem eigenen Computer** (Windows, Linux oder Docker), und Sie
@@ -57,7 +57,7 @@ unbeschädigt ist.
 
 ### Windows
 
-1. Entpacken Sie `HL-Spot-1.0.2-prod-windows-x64.zip`.
+1. Entpacken Sie `HL-Spot-1.0.3-prod-windows-x64.zip`.
 2. Starten Sie im entpackten Ordner **`HL-Spot.exe`**. Ein Konsolenfenster öffnet sich: Lassen Sie es geöffnet, solange
    der Bot läuft.
 3. Öffnen Sie **http://localhost:60000** in Ihrem Browser.
@@ -65,8 +65,8 @@ unbeschädigt ist.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 oder neuer)
 
 ```
-unzip HL-Spot-1.0.2-prod-linux-x64.zip
-cd HL-Spot-1.0.2-prod-linux-x64
+unzip HL-Spot-1.0.3-prod-linux-x64.zip
+cd HL-Spot-1.0.3-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +75,9 @@ cd HL-Spot-1.0.2-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
 ```
 
 - `-p 60000:60000` ist erforderlich, um die Webseite zu erreichen.
@@ -137,7 +137,7 @@ Das Menü oben bietet Zugriff auf:
 
 | Seite | Verwendung |
 |---|---|
-| 📊 Dashboard | Guthaben, Marktstatus, Zustand jedes spot-Zyklus |
+| 📊 Dashboard | ein Tab pro spot-Paar: seine Zyklen und sein Marktstatus |
 | 📈 Statistiken | Ergebnisse der spot- und perp-Zyklen nach Zeitraum |
 | 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare und ihre Einstellungen |
 | 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare |
@@ -573,7 +573,7 @@ Unabhängig vom Typ können Sie das API-Wallet jederzeit auf Hyperliquid widerru
 
 | Flux-Feld | Wert |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.2` |
+| Image | `olivier1246/hl-spot:1.0.3` |
 | Port und Container-Port | `60000` |
 | Container-Daten | `g:/data` (**erforderlich**) |
 | CPU | 0,2 |

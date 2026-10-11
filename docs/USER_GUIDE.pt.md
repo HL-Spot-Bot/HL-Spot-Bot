@@ -1,6 +1,6 @@
 # HL-Spot — Guia do utilizador
 
-Versão 1.0.2
+Versão 1.0.3
 
 O HL-Spot é um bot de trading para a **Hyperliquid**: mercados spot e perpétuos (perp), vários pares,
 ordens automáticas e manuais. Funciona **no seu próprio computador** (Windows, Linux ou Docker) e
@@ -57,7 +57,7 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 
 ### Windows
 
-1. Descompacte `HL-Spot-1.0.2-prod-windows-x64.zip`.
+1. Descompacte `HL-Spot-1.0.3-prod-windows-x64.zip`.
 2. Na pasta descompactada, execute **`HL-Spot.exe`**. Abre-se uma janela de consola: mantenha-a aberta enquanto
    o bot estiver a funcionar.
 3. Abra **http://localhost:60000** no seu navegador.
@@ -65,8 +65,8 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 ou mais recente)
 
 ```
-unzip HL-Spot-1.0.2-prod-linux-x64.zip
-cd HL-Spot-1.0.2-prod-linux-x64
+unzip HL-Spot-1.0.3-prod-linux-x64.zip
+cd HL-Spot-1.0.3-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +75,9 @@ Em seguida, abra **http://localhost:60000** no seu navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
 ```
 
 - `-p 60000:60000` é obrigatório para aceder à página web.
@@ -137,7 +137,7 @@ O menu no topo dá acesso a:
 
 | Página | Utilização |
 |---|---|
-| 📊 Painel | saldos, estado do mercado, estado de cada ciclo spot |
+| 📊 Painel | uma aba por par spot: seus ciclos e o estado do seu mercado |
 | 📈 Estatísticas | resultados dos ciclos spot e perp, por período |
 | 🧩 Pares negociados | pares spot e perp configurados para o bot, e as respetivas configurações |
 | 🟣 Ciclos perp | entradas, take-profits, stop-losses e fechamentos dos pares perp |
@@ -571,7 +571,7 @@ Seja qual for o tipo, pode revogar o API wallet na Hyperliquid a qualquer moment
 
 | Campo do Flux | Valor |
 |---|---|
-| Imagem | `olivier1246/hl-spot:1.0.2` |
+| Imagem | `olivier1246/hl-spot:1.0.3` |
 | Porta e porta do contentor | `60000` |
 | Dados do contentor | `g:/data` (**obrigatório**) |
 | CPU | 0,2 |

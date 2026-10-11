@@ -1,6 +1,6 @@
 # HL-Spot — Guida utente
 
-Versione 1.0.2
+Versione 1.0.3
 
 HL-Spot è un bot di trading per **Hyperliquid**: mercati spot e perpetual (perp), più coppie,
 ordini automatici e manuali. Funziona **sul tuo computer** (Windows, Linux o Docker) e lo
@@ -57,7 +57,7 @@ integro.
 
 ### Windows
 
-1. Decomprimi `HL-Spot-1.0.2-prod-windows-x64.zip`.
+1. Decomprimi `HL-Spot-1.0.3-prod-windows-x64.zip`.
 2. Nella cartella decompressa, esegui **`HL-Spot.exe`**. Si apre una finestra di console: tienila aperta finché
    il bot è in funzione.
 3. Apri **http://localhost:60000** nel tuo browser.
@@ -65,8 +65,8 @@ integro.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 o successivi)
 
 ```
-unzip HL-Spot-1.0.2-prod-linux-x64.zip
-cd HL-Spot-1.0.2-prod-linux-x64
+unzip HL-Spot-1.0.3-prod-linux-x64.zip
+cd HL-Spot-1.0.3-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +75,9 @@ Poi apri **http://localhost:60000** nel tuo browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.2-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.2
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
 ```
 
 - `-p 60000:60000` è necessario per raggiungere la pagina web.
@@ -137,7 +137,7 @@ Il menu in alto dà accesso a:
 
 | Pagina | Uso |
 |---|---|
-| 📊 Dashboard | Saldi, stato del mercato, stato di ogni ciclo spot |
+| 📊 Dashboard | una scheda per coppia spot: i suoi cicli e lo stato del suo mercato |
 | 📈 Statistiche | Risultati dei cicli spot e perp, per periodo |
 | 🧩 Coppie negoziate | Coppie spot e perp configurate per il bot, e le loro impostazioni |
 | 🟣 Cicli perp | Entrate, take-profit, stop-loss e chiusure delle coppie perp |
@@ -573,7 +573,7 @@ Qualunque sia il tipo, puoi revocare l'API wallet su Hyperliquid in qualsiasi mo
 
 | Campo Flux | Valore |
 |---|---|
-| Immagine | `olivier1246/hl-spot:1.0.2` |
+| Immagine | `olivier1246/hl-spot:1.0.3` |
 | Porta e porta del container | `60000` |
 | Dati del container | `g:/data` (**obbligatorio**) |
 | CPU | 0,2 |
