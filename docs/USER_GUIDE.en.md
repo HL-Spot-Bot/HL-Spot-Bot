@@ -388,13 +388,13 @@ Defaults: BULL buy 0 / sell +1000, 3 %, pause 10 min, interval 360 min; BEAR buy
 sell 0, 3 %, pause 10 min, interval 360 min; RANGE buy −400 / sell +400, 5 %, pause 10 min,
 interval 180 min.
 
-**Orders and fees**
+**Orders**
 
 | Setting | Default | Meaning |
 |---|---|---|
 | Minimum order value (USDC) | 10 | smaller orders are not placed (Hyperliquid minimum: 10) |
-| Maker fee (%) | 0.04 | used only when the real fees of a trade are missing |
-| Taker fee (%) | 0.07 | fee estimate for market and stop market orders |
+
+**Hyperliquid fees** (read-only): your fees are read from Hyperliquid when the bot starts, then every hour, separately for **spot** and **perp** (maker = limit order, taker = market order). They take into account your volume tier, your staked HYPE and your referral discount. They are only used to estimate the fees of a trade whose real fees are not known yet: profits always use the real fees of each execution. The **Refresh** button reads them again immediately. Until they have been read, the bot uses the Hyperliquid base rates (spot: maker 0.040%, taker 0.070%; perp: maker 0.015%, taker 0.045%).
 
 **Timing and synchronization**
 

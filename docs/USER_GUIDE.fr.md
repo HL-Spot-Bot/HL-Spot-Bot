@@ -393,13 +393,13 @@ Valeurs par défaut : BULL achat 0 / vente +1000, 3 %, pause 10 min, intervalle 
 achat −1000 / vente 0, 3 %, pause 10 min, intervalle 360 min ; RANGE achat −400 / vente +400,
 5 %, pause 10 min, intervalle 180 min.
 
-**Ordres et frais**
+**Ordres**
 
 | Réglage | Défaut | Signification |
 |---|---|---|
 | Valeur minimale d'ordre (USDC) | 10 | les ordres plus petits ne sont pas placés (minimum d'Hyperliquid : 10) |
-| Frais maker (%) | 0,04 | utilisés uniquement quand les frais réels d'un trade sont manquants |
-| Frais taker (%) | 0,07 | estimation des frais des ordres market et stop market |
+
+**Frais Hyperliquid** (lecture seule) : vos frais sont lus chez Hyperliquid au démarrage du bot puis toutes les heures, séparément pour le **spot** et le **perp** (maker = ordre limit, taker = ordre market). Ils tiennent compte de votre palier de volume, de vos HYPE en staking et de votre réduction de parrainage. Ils servent seulement à estimer les frais d'un trade dont les frais réels ne sont pas encore connus : les gains utilisent toujours les frais réels de chaque exécution. Le bouton **Actualiser** les relit tout de suite. Tant qu'ils n'ont pas pu être lus, le bot utilise les taux de base d'Hyperliquid (spot : maker 0,040 %, taker 0,070 % ; perp : maker 0,015 %, taker 0,045 %).
 
 **Cadencement et synchronisation**
 

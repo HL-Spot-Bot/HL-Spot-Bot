@@ -388,13 +388,13 @@ Padrões: BULL compra 0 / venda +1000, 3 %, pausa 10 min, intervalo 360 min; BEA
 venda 0, 3 %, pausa 10 min, intervalo 360 min; RANGE compra −400 / venda +400, 5 %, pausa 10 min,
 intervalo 180 min.
 
-**Ordens e taxas**
+**Ordens**
 
 | Configuração | Padrão | Significado |
 |---|---|---|
 | Valor mínimo de ordem (USDC) | 10 | as ordens mais pequenas não são colocadas (mínimo da Hyperliquid: 10) |
-| Taxa maker (%) | 0,04 | usada apenas quando faltam as taxas reais de uma transação |
-| Taxa taker (%) | 0,07 | estimativa da taxa para as ordens market e stop market |
+
+**Taxas da Hyperliquid** (somente leitura): suas taxas são lidas na Hyperliquid na inicialização do bot e depois a cada hora, separadamente para **spot** e **perp** (maker = ordem limite, taker = ordem a mercado). Elas consideram seu nível de volume, seus HYPE em staking e seu desconto de indicação. Servem apenas para estimar as taxas de um trade cujas taxas reais ainda não são conhecidas: os lucros usam sempre as taxas reais de cada execução. O botão **Atualizar** as lê novamente na hora. Enquanto não puderem ser lidas, o bot usa as taxas base da Hyperliquid (spot: maker 0,040%, taker 0,070%; perp: maker 0,015%, taker 0,045%).
 
 **Tempo e sincronização**
 

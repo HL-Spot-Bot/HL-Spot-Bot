@@ -383,13 +383,13 @@ Valores por defecto: BULL compra 0 / venta +1000, 3 %, pausa 10 min, intervalo 3
 venta 0, 3 %, pausa 10 min, intervalo 360 min; RANGE compra −400 / venta +400, 5 %, pausa 10 min,
 intervalo 180 min.
 
-**Órdenes y comisiones**
+**Órdenes**
 
 | Ajuste | Por defecto | Significado |
 |---|---|---|
 | Valor mínimo de orden (USDC) | 10 | las órdenes más pequeñas no se colocan (mínimo de Hyperliquid: 10) |
-| Comisión maker (%) | 0,04 | solo se usa cuando faltan las comisiones reales de una operación |
-| Comisión taker (%) | 0,07 | estimación de la comisión de las órdenes market y stop market |
+
+**Comisiones de Hyperliquid** (solo lectura): sus comisiones se leen en Hyperliquid al iniciar el bot y luego cada hora, por separado para **spot** y **perp** (maker = orden límite, taker = orden de mercado). Tienen en cuenta su nivel de volumen, sus HYPE en staking y su descuento por referido. Solo sirven para estimar las comisiones de una operación cuyas comisiones reales aún no se conocen: las ganancias usan siempre las comisiones reales de cada ejecución. El botón **Actualizar** las vuelve a leer de inmediato. Mientras no se hayan podido leer, el bot usa las tarifas base de Hyperliquid (spot: maker 0,040 %, taker 0,070 %; perp: maker 0,015 %, taker 0,045 %).
 
 **Temporización y sincronización**
 

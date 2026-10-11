@@ -388,13 +388,13 @@ Standardwerte: BULL Kauf 0 / Verkauf +1000, 3 %, Pause 10 min, Intervall 360 min
 Verkauf 0, 3 %, Pause 10 min, Intervall 360 min; RANGE Kauf −400 / Verkauf +400, 5 %, Pause 10 min,
 Intervall 180 min.
 
-**Orders und Gebühren**
+**Orders**
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|
 | Mindestwert einer Order (USDC) | 10 | kleinere Orders werden nicht platziert (Hyperliquid-Minimum: 10) |
-| Maker-Gebühr (%) | 0,04 | nur verwendet, wenn die tatsächlichen Gebühren eines Trades fehlen |
-| Taker-Gebühr (%) | 0,07 | Gebührenschätzung für Market- und Stop-Market-Orders |
+
+**Hyperliquid-Gebühren** (nur Anzeige): Ihre Gebühren werden beim Start des Bots und danach stündlich bei Hyperliquid gelesen, getrennt für **spot** und **perp** (Maker = Limit-Order, Taker = Market-Order). Sie berücksichtigen Ihre Volumenstufe, Ihre gestakten HYPE und Ihren Empfehlungsrabatt. Sie dienen nur zur Schätzung der Gebühren eines Trades, dessen tatsächliche Gebühren noch nicht bekannt sind: Gewinne verwenden immer die tatsächlichen Gebühren jeder Ausführung. Die Schaltfläche **Aktualisieren** liest sie sofort neu. Solange sie nicht gelesen werden konnten, verwendet der Bot die Hyperliquid-Basissätze (spot: Maker 0,040 %, Taker 0,070 %; perp: Maker 0,015 %, Taker 0,045 %).
 
 **Timing und Synchronisierung**
 
