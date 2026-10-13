@@ -1,0 +1,64 @@
+# HL-Spot - VPS with Docker: bot + Caddy HTTPS proxy (1.0.4)
+#
+# 1. Put in one folder: docker-compose.yml, Caddyfile.ip, Caddyfile.domain and a .env file:
+#        HL_SPOT_SITE=203.0.113.10          public IP address of the VPS, or your domain name
+#        HL_SPOT_CADDYFILE=Caddyfile.ip     Caddyfile.domain for a domain name
+#        HL_SPOT_SETUP_CODE=<12 characters or more>   first-launch code (required)
+#        TZ=Europe/Paris
+# 2. docker compose up -d       then open https://<HL_SPOT_SITE>
+#
+# Only Caddy publishes ports (80: certificate, 443: HTTPS). The bot's port 60000 is NOT
+# published: Docker bypasses the ufw firewall for the ports it publishes (Docker
+# documentation), so it must never be published on a VPS.
+# Caddy reaches the bot through the internal network "hlspot"; its fixed address
+# (172.30.60.10) is declared to the bot as a trusted proxy. If this network conflicts with an
+# existing network of the machine, change subnet, both ipv4_address values and
+# HL_SPOT_TRUSTED_PROXIES together. Keep the bot's listening address at 0.0.0.0 in Docker.
+# IPv6: with Docker's default settings, clients connecting over IPv6 all reach Caddy with the
+# address of the Docker gateway (one shared address for the per-address lockout). Give the
+# domain no AAAA record, or enable IPv6 in Docker.
+services:
+  hl-spot:
+    image: olivier1246/hl-spot:1.0.4
+    container_name: hl-spot
+    restart: unless-stopped
+    environment:
+      HL_SPOT_SETUP_CODE: ${HL_SPOT_SETUP_CODE:?HL_SPOT_SETUP_CODE missing in .env}
+      HL_SPOT_TRUSTED_PROXIES: 172.30.60.10
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - hl-spot-data:/data
+    networks:
+      hlspot:
+        ipv4_address: 172.30.60.2
+
+  caddy:
+    image: caddy:2.11
+    container_name: hl-spot-caddy
+    restart: unless-stopped
+    depends_on:
+      - hl-spot
+    environment:
+      HL_SPOT_SITE: ${HL_SPOT_SITE:?HL_SPOT_SITE missing in .env}
+      HL_SPOT_UPSTREAM: hl-spot:60000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./${HL_SPOT_CADDYFILE:-Caddyfile.ip}:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      hlspot:
+        ipv4_address: 172.30.60.10
+
+networks:
+  hlspot:
+    ipam:
+      config:
+        - subnet: 172.30.60.0/24
+
+volumes:
+  hl-spot-data:
+  caddy-data:
+  caddy-config:

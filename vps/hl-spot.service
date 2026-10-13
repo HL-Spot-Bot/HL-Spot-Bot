@@ -1,0 +1,36 @@
+# HL-Spot (1.0.4) - /etc/systemd/system/hl-spot.service, installed by install-linux.sh
+[Unit]
+Description=HL-Spot trading bot (web interface behind Caddy HTTPS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=hlspot
+Group=hlspot
+# Customer data (.env, secret.key, database, log, cache): /var/lib/hl-spot, hlspot only
+Environment=HL_SPOT_DATA_DIR=/var/lib/hl-spot
+# First-launch code (HL_SPOT_SETUP_CODE) and time zone (TZ), readable by root only
+EnvironmentFile=/etc/hl-spot/hl-spot.env
+WorkingDirectory=/var/lib/hl-spot
+ExecStart=/opt/hl-spot/current/hl-spot
+Restart=always
+RestartSec=10
+# The bot handles SIGTERM (clean stop)
+TimeoutStopSec=60
+
+# Hardening: only /var/lib/hl-spot is writable
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+UMask=0077
+ReadWritePaths=/var/lib/hl-spot
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 # HL-Spot — Guia do utilizador
 
-Versão 1.0.3
+Versão 1.0.4
 
 O HL-Spot é um bot de trading para a **Hyperliquid**: mercados spot e perpétuos (perp), vários pares,
 ordens automáticas e manuais. Funciona **no seu próprio computador** (Windows, Linux ou Docker) e
@@ -19,6 +19,7 @@ Precisa de:
 - um computador com processador x86 de 64 bits (x86_64) com **Windows** ou **Linux**, ou qualquer
   máquina com **Docker**;
 - ou uma conta **Flux**, para o executar na nuvem (secção 16);
+- ou um **servidor alugado (VPS)** com Linux ou Windows, acessível por HTTPS (secção 17);
 - uma conta **Hyperliquid** com fundos (a sua carteira principal);
 - uma carteira capaz de **"assinar uma mensagem"** com o endereço da sua carteira principal. Uma extensão
   de navegador (MetaMask, Rabby…) é o mais simples: o bot abre-a por si. Qualquer outra carteira funciona por
@@ -57,7 +58,7 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 
 ### Windows
 
-1. Descompacte `HL-Spot-1.0.3-prod-windows-x64.zip`.
+1. Descompacte `HL-Spot-1.0.4-prod-windows-x64.zip`.
 2. Na pasta descompactada, execute **`HL-Spot.exe`**. Abre-se uma janela de consola: mantenha-a aberta enquanto
    o bot estiver a funcionar.
 3. Abra **http://localhost:60000** no seu navegador.
@@ -65,8 +66,8 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 ou mais recente)
 
 ```
-unzip HL-Spot-1.0.3-prod-linux-x64.zip
-cd HL-Spot-1.0.3-prod-linux-x64
+unzip HL-Spot-1.0.4-prod-linux-x64.zip
+cd HL-Spot-1.0.4-prod-linux-x64
 ./hl-spot
 ```
 
@@ -75,9 +76,9 @@ Em seguida, abra **http://localhost:60000** no seu navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.4-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.4
 ```
 
 - `-p 60000:60000` é obrigatório para aceder à página web.
@@ -545,6 +546,8 @@ machine address>:60000`.
 Na rede, a página **não é encriptada**: introduza a chave da sua API wallet e a sua senha
 de preferência a partir da máquina do bot. Nunca exponha a porta 60000 diretamente à Internet.
 
+Para aceder ao bot pela Internet (VPS), siga a secção 17: o acesso por HTTPS é obrigatório.
+
 ## 16. Executar o HL-Spot no Flux
 
 O [Flux](https://runonflux.com) é uma nuvem descentralizada: aluga contentores em servidores
@@ -571,7 +574,7 @@ Seja qual for o tipo, pode revogar o API wallet na Hyperliquid a qualquer moment
 
 | Campo do Flux | Valor |
 |---|---|
-| Imagem | `olivier1246/hl-spot:1.0.3` |
+| Imagem | `olivier1246/hl-spot:1.0.4` |
 | Porta e porta do contentor | `60000` |
 | Dados do contentor | `g:/data` (**obrigatório**) |
 | CPU | 0,2 |
@@ -603,7 +606,125 @@ Seja qual for o tipo, pode revogar o API wallet na Hyperliquid a qualquer moment
 - A página é acessível a partir da Internet: está protegida pela sua senha. Escolha uma
   forte.
 
-## 17. Suporte
+## 17. Instalar o HL-Spot num VPS (acesso HTTPS)
+
+Num servidor alugado (VPS), a página do bot é acedida a partir da Internet. Tem de passar por
+**HTTPS**: sem encriptação, a sua senha e a chave da sua API wallet circulam em texto simples, e
+robôs da Internet sondam constantemente as portas abertas. O bot mostra uma faixa de aviso e
+regista um erro no log quando recebe um pedido HTTP vindo da Internet.
+
+Como funciona: um proxy HTTPS, o **Caddy**, instalado na mesma máquina, recebe as
+ligações na porta 443 e encaminha-as para o bot. O Caddy obtém e renova sozinho um
+certificado **Let's Encrypt**:
+
+- no **endereço IP público** do VPS (predefinição): certificado de curta duração (cerca de 6 dias),
+  renovado automaticamente;
+- ou no seu **nome de domínio** (ex.: `bot.example.com`), cujo registo DNS deve apontar para o
+  endereço IP do VPS.
+
+Portas a abrir: **80** (certificado) e **443** (HTTPS), além do seu acesso de administração
+(SSH, Ambiente de Trabalho Remoto). **A porta 60000 do bot nunca deve estar aberta.** Se o seu fornecedor
+de alojamento tiver a sua própria firewall, abra também lá as portas 80 e 443.
+
+Os ficheiros necessários estão na pasta `vps/` do repositório
+https://github.com/HL-Spot-Bot/HL-Spot-Bot.
+
+### Linux (Ubuntu 22.04 ou mais recente, Debian 12 ou mais recente)
+
+```
+curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
+sudo sh install-linux.sh <endereço IP público ou nome de domínio>
+```
+
+O script instala o Caddy, descarrega o HL-Spot e verifica o seu checksum SHA-256, cria o
+serviço `hl-spot` (arranque automático, dados em `/var/lib/hl-spot`) e configura o HTTPS e a
+firewall `ufw` (SSH, 80, 443). No final, mostra o **código de primeira inicialização**, guardado em
+`/etc/hl-spot/hl-spot.env`.
+
+- Estado do serviço e log: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+- **Atualização**: descarregue o novo script e execute-o novamente com a versão como segundo parâmetro
+  (ex.: `sudo sh install-linux.sh <endereço> 1.0.5`). Os seus dados são mantidos.
+
+### Docker
+
+Numa pasta, descarregue os ficheiros:
+
+```
+for f in docker-compose.yml Caddyfile.ip Caddyfile.domain; do
+  curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/$f
+done
+```
+
+Crie um ficheiro `.env` nesta pasta:
+
+```
+HL_SPOT_SITE=<endereço IP público ou nome de domínio>
+HL_SPOT_CADDYFILE=Caddyfile.ip
+HL_SPOT_SETUP_CODE=<o seu código, 12 caracteres ou mais>
+TZ=Europe/Paris
+```
+
+(`HL_SPOT_CADDYFILE=Caddyfile.domain` para um nome de domínio) e, em seguida, execute `docker compose up -d`.
+
+- Apenas o Caddy publica portas (80 e 443). Nunca publique a porta 60000 do bot: o Docker contorna
+  a firewall `ufw` para as portas que publica.
+- Com o Docker, o endereço de escuta do bot mantém-se em **0.0.0.0** (o Caddy acede-lhe através
+  da rede interna do Docker).
+
+### Windows Server
+
+Comandos PowerShell, a executar como administrador.
+
+**1.** Instale o HL-Spot (secção 4) numa pasta fixa, por exemplo `C:\HL-Spot` (`HL-Spot.exe`
+diretamente nesta pasta).
+
+**2.** Código de primeira inicialização (12 caracteres ou mais):
+
+```
+[Environment]::SetEnvironmentVariable('HL_SPOT_SETUP_CODE', '<o seu código>', 'Machine')
+```
+
+**3.** Arranque automático do bot, com a sua conta Windows (mesmo sem sessão aberta):
+
+```
+$a = New-ScheduledTaskAction -Execute 'C:\HL-Spot\HL-Spot.exe' -WorkingDirectory 'C:\HL-Spot'
+$t = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName 'HL-Spot' -Action $a -Trigger $t -User $env:USERNAME -Password '<senha do Windows>'
+Start-ScheduledTask -TaskName 'HL-Spot'
+```
+
+**4.** Caddy: descarregue `caddy_<version>_windows_amd64.zip` a partir de
+https://github.com/caddyserver/caddy/releases e coloque `caddy.exe` em `C:\Caddy`.
+Copie `Caddyfile.ip` (ou `Caddyfile.domain`) da pasta `vps/` para `C:\Caddy\Caddyfile` e, em seguida:
+
+```
+(Get-Content C:\Caddy\Caddyfile) -replace '\{\$HL_SPOT_SITE\}', '<endereço IP ou domínio>' | Set-Content C:\Caddy\Caddyfile
+sc.exe create caddy start= auto binPath= "C:\Caddy\caddy.exe run --config C:\Caddy\Caddyfile --adapter caddyfile"
+sc.exe start caddy
+```
+
+**5.** Firewall do Windows:
+
+```
+New-NetFirewallRule -DisplayName 'HL-Spot HTTPS (Caddy)' -Direction Inbound -Protocol TCP -LocalPort 80,443 -Action Allow
+```
+
+### Após a instalação
+
+1. Abra `https://<endereço IP ou domínio>` (primeiro certificado: de alguns segundos a alguns minutos)
+   e siga a secção 5, introduzindo o **Código de primeira inicialização**.
+2. Linux e Windows: **Configurações → Interface web → Endereço de escuta** = `127.0.0.1` e, em seguida,
+   reinicie o bot (`sudo systemctl restart hl-spot`, ou a tarefa `HL-Spot` no Windows). O
+   bot passa a aceitar apenas as ligações vindas do Caddy.
+3. Opcional: se o seu endereço IP for fixo, autorize apenas esse endereço no Caddyfile (linhas `remote_ip`,
+   a descomentar).
+
+Proteções do bot: 5 senhas erradas a partir do mesmo endereço bloqueiam-no durante 15 minutos; acima de
+10 senhas erradas em 15 minutos, considerando todos os endereços em conjunto, as tentativas são abrandadas (espera de até
+60 segundos). Alterar a senha encerra todas as outras sessões abertas. Escolha uma senha
+forte.
+
+## 18. Suporte
 
 - E-mail: HL-spot@cmails.eu
 

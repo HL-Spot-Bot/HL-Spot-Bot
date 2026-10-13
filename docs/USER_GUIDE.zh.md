@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.3
+版本 1.0.4
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -16,6 +16,7 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 - 一台搭载 64 位 x86 处理器（x86_64）并运行 **Windows** 或 **Linux** 的电脑，或任何装有 **Docker** 的机器；
 - 或者一个 **Flux** 账户，以便在云端运行（第 16 节）；
+- 或者一台运行 Linux 或 Windows 的**租用服务器（VPS）**，通过 HTTPS 访问（第 17 节）；
 - 一个有资金的 **Hyperliquid** 账户（您的主 wallet）；
 - 一个能够用您的主 wallet 地址“**签名消息**”的 wallet。浏览器扩展（MetaMask、Rabby…）最为简单：机器人会为您打开它。其他任何 wallet 也可以通过复制粘贴的方式使用；
 - 互联网连接。
@@ -43,15 +44,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.3-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.4-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.3-prod-linux-x64.zip
-cd HL-Spot-1.0.3-prod-linux-x64
+unzip HL-Spot-1.0.4-prod-linux-x64.zip
+cd HL-Spot-1.0.4-prod-linux-x64
 ./hl-spot
 ```
 
@@ -60,9 +61,9 @@ cd HL-Spot-1.0.3-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.3-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.4-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.3
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.4
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -419,6 +420,8 @@ BULL、BEAR、RANGE 各一个区块：
 
 在网络上，页面是**不加密**的：最好在机器人所在的机器上输入您的 API wallet 密钥和密码。切勿将端口 60000 直接暴露到互联网。
 
+如需从互联网访问机器人（VPS），请按照第 17 节操作：必须使用 HTTPS 访问。
+
 ## 16. 在 Flux 上运行 HL-Spot
 
 [Flux](https://runonflux.com) 是一个去中心化云：它在由第三方运营的服务器（节点）上出租容器。HL-Spot 可以在那里全天候运行，无需您的电脑。Flux 独立于 HL-Spot，费用支付给 Flux。
@@ -436,7 +439,7 @@ BULL、BEAR、RANGE 各一个区块：
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.3` |
+| 镜像 | `olivier1246/hl-spot:1.0.4` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
@@ -461,7 +464,100 @@ BULL、BEAR、RANGE 各一个区块：
 - **更新**：在 Flux 的应用设置中将镜像替换为新版本。
 - 该页面可从互联网访问：受您的密码保护。请选择强密码。
 
-## 17. 支持
+## 17. 在 VPS 上安装 HL-Spot（HTTPS 访问）
+
+在租用的服务器（VPS）上，机器人的页面可从互联网访问。访问必须通过 **HTTPS**：如果不加密，您的密码和 API wallet 密钥将以明文传输，而且互联网上的机器人程序会不断探测开放的端口。当机器人收到来自互联网的 HTTP 请求时，会显示警告横幅并在日志中记录一条错误。
+
+工作原理：安装在同一台机器上的 HTTPS 代理 **Caddy** 在端口 443 上接收连接，并将其转发给机器人。Caddy 会自行获取并续期 **Let's Encrypt** 证书：
+
+- 基于 VPS 的**公网 IP 地址**（默认）：短期证书（约 6 天），自动续期；
+- 或基于您的**域名**（例如 `bot.example.com`），其 DNS 记录必须指向 VPS 的 IP 地址。
+
+需要开放的端口：**80**（证书）和 **443**（HTTPS），以及您的管理访问（SSH、远程桌面）。**机器人的端口 60000 绝不能开放。**如果您的托管服务商有自己的防火墙，也请在其中开放 80 和 443。
+
+所需文件位于仓库 https://github.com/HL-Spot-Bot/HL-Spot-Bot 的 `vps/` 文件夹中。
+
+### Linux（Ubuntu 22.04 或更新版本、Debian 12 或更新版本）
+
+```
+curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
+sudo sh install-linux.sh <公网 IP 地址或域名>
+```
+
+该脚本会安装 Caddy，下载 HL-Spot 并校验其 SHA-256 校验和，创建 `hl-spot` 服务（自动启动，数据位于 `/var/lib/hl-spot`），并配置 HTTPS 和 `ufw` 防火墙（SSH、80、443）。最后，它会显示保存在 `/etc/hl-spot/hl-spot.env` 中的**首次启动代码**。
+
+- 服务状态和日志：`sudo systemctl status hl-spot`、`journalctl -u hl-spot -f`。
+- **更新**：下载新脚本，并以版本号作为第二个参数再次运行（例如 `sudo sh install-linux.sh <地址> 1.0.5`）。您的数据会保留。
+
+### Docker
+
+在一个文件夹中下载这些文件：
+
+```
+for f in docker-compose.yml Caddyfile.ip Caddyfile.domain; do
+  curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/$f
+done
+```
+
+在该文件夹中创建 `.env` 文件：
+
+```
+HL_SPOT_SITE=<公网 IP 地址或域名>
+HL_SPOT_CADDYFILE=Caddyfile.ip
+HL_SPOT_SETUP_CODE=<您的代码，至少 12 个字符>
+TZ=Europe/Paris
+```
+
+（使用域名时为 `HL_SPOT_CADDYFILE=Caddyfile.domain`），然后运行 `docker compose up -d`。
+
+- 只有 Caddy 发布端口（80 和 443）。切勿发布机器人的端口 60000：对于 Docker 发布的端口，Docker 会绕过 `ufw` 防火墙。
+- 使用 Docker 时，机器人的监听地址保持为 **0.0.0.0**（Caddy 通过 Docker 内部网络访问它）。
+
+### Windows Server
+
+PowerShell 命令，以管理员身份运行。
+
+**1.** 将 HL-Spot（第 4 节）安装到一个固定文件夹，例如 `C:\HL-Spot`（`HL-Spot.exe` 直接位于该文件夹中）。
+
+**2.** 首次启动代码（至少 12 个字符）：
+
+```
+[Environment]::SetEnvironmentVariable('HL_SPOT_SETUP_CODE', '<您的代码>', 'Machine')
+```
+
+**3.** 以您的 Windows 账户自动启动机器人（即使没有打开的会话）：
+
+```
+$a = New-ScheduledTaskAction -Execute 'C:\HL-Spot\HL-Spot.exe' -WorkingDirectory 'C:\HL-Spot'
+$t = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName 'HL-Spot' -Action $a -Trigger $t -User $env:USERNAME -Password '<Windows 密码>'
+Start-ScheduledTask -TaskName 'HL-Spot'
+```
+
+**4.** Caddy：从 https://github.com/caddyserver/caddy/releases 下载 `caddy_<版本>_windows_amd64.zip`，并将 `caddy.exe` 放入 `C:\Caddy`。
+将 `vps/` 文件夹中的 `Caddyfile.ip`（或 `Caddyfile.domain`）复制为 `C:\Caddy\Caddyfile`，然后：
+
+```
+(Get-Content C:\Caddy\Caddyfile) -replace '\{\$HL_SPOT_SITE\}', '<IP 地址或域名>' | Set-Content C:\Caddy\Caddyfile
+sc.exe create caddy start= auto binPath= "C:\Caddy\caddy.exe run --config C:\Caddy\Caddyfile --adapter caddyfile"
+sc.exe start caddy
+```
+
+**5.** Windows 防火墙：
+
+```
+New-NetFirewallRule -DisplayName 'HL-Spot HTTPS (Caddy)' -Direction Inbound -Protocol TCP -LocalPort 80,443 -Action Allow
+```
+
+### 安装之后
+
+1. 打开 `https://<IP 地址或域名>`（首次获取证书：几秒到几分钟），按照第 5 节操作，并输入**首次启动代码**。
+2. Linux 和 Windows：**设置 → 网页界面 → 监听地址** = `127.0.0.1`，然后重启机器人（`sudo systemctl restart hl-spot`，或在 Windows 上重启 `HL-Spot` 任务）。此后机器人只接受来自 Caddy 的连接。
+3. 可选：如果您的 IP 地址是固定的，可在 Caddyfile 中只允许该地址（取消注释 `remote_ip` 行）。
+
+机器人的保护措施：同一地址输错密码 5 次将被封锁 15 分钟；所有地址合计在 15 分钟内输错密码超过 10 次时，尝试会被减速（最多等待 60 秒）。修改密码会关闭所有其他已打开的会话。请选择强密码。
+
+## 18. 支持
 
 - 电子邮件：HL-spot@cmails.eu
 

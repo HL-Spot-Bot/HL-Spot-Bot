@@ -1,0 +1,23 @@
+# HL-Spot - HTTPS proxy in front of the bot's web interface (1.0.4)
+# Access by the PUBLIC IP ADDRESS of the machine: Let's Encrypt "shortlived" certificate
+# (about 6 days, renewed automatically by Caddy; port 80 must stay open).
+#
+# {$HL_SPOT_SITE}     : public IP address of the machine (replaced by install-linux.sh,
+#                       by hand on Windows, environment variable with Docker)
+# {$HL_SPOT_UPSTREAM} : bot web interface; 127.0.0.1:60000 when not set (same machine)
+#
+# The bot trusts 127.0.0.1 (X-Forwarded-* headers set by Caddy); Caddy ignores these
+# headers when they come from the Internet.
+{$HL_SPOT_SITE} {
+	tls {
+		issuer acme {
+			dir https://acme-v02.api.letsencrypt.org/directory
+			profile shortlived
+		}
+	}
+	# Optional: accept only your fixed IP address (remove the "#" and set your address)
+	# @others not remote_ip 203.0.113.10
+	# respond @others 403
+	encode zstd gzip
+	reverse_proxy {$HL_SPOT_UPSTREAM:127.0.0.1:60000}
+}
