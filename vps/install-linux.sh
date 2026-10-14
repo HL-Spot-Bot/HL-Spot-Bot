@@ -18,7 +18,7 @@
 #   7. ufw firewall: SSH port(s), 80 and 443 only - the bot's port (60000) stays closed.
 set -eu
 
-VERSION_DEFAULT=1.0.4
+VERSION_DEFAULT=1.0.5
 REPO=https://github.com/HL-Spot-Bot/HL-Spot-Bot
 SITE="${1:-}"
 VERSION="${2:-$VERSION_DEFAULT}"

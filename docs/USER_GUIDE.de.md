@@ -1,6 +1,6 @@
 # HL-Spot — Benutzerhandbuch
 
-Version 1.0.4
+Version 1.0.5
 
 HL-Spot ist ein Trading-Bot für **Hyperliquid**: spot- und Perpetual-Märkte (perp), mehrere Paare,
 automatische und manuelle Orders. Er läuft **auf Ihrem eigenen Computer** (Windows, Linux oder Docker), und Sie
@@ -58,7 +58,7 @@ unbeschädigt ist.
 
 ### Windows
 
-1. Entpacken Sie `HL-Spot-1.0.4-prod-windows-x64.zip`.
+1. Entpacken Sie `HL-Spot-1.0.5-prod-windows-x64.zip`.
 2. Starten Sie im entpackten Ordner **`HL-Spot.exe`**. Ein Konsolenfenster öffnet sich: Lassen Sie es geöffnet, solange
    der Bot läuft.
 3. Öffnen Sie **http://localhost:60000** in Ihrem Browser.
@@ -66,8 +66,8 @@ unbeschädigt ist.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 oder neuer)
 
 ```
-unzip HL-Spot-1.0.4-prod-linux-x64.zip
-cd HL-Spot-1.0.4-prod-linux-x64
+unzip HL-Spot-1.0.5-prod-linux-x64.zip
+cd HL-Spot-1.0.5-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ cd HL-Spot-1.0.4-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.4-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.5-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.4
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.5
 ```
 
 - `-p 60000:60000` ist erforderlich, um die Webseite zu erreichen.
@@ -202,10 +202,16 @@ Ein spot-Zyklus besteht aus einem Kauf, gefolgt von einem Verkauf derselben Meng
    - **in einem RANGE-Markt** sind die Offsets **dynamisch**: Kauf = *P* − *d*, Verkauf = *P* + *d*,
      mit *d* = Range-Spanne × **RANGE - % der genutzten Range** / 100 / 2. Die statischen
      RANGE-Offsets des Paares werden nur verwendet, wenn die Range nicht berechnet werden kann (Spanne 0).
-4. **Menge.** Betrag = **% des USDC-Guthabens** × das **verfügbare** USDC (nicht bereits durch
-   offene Orders gebunden). Menge = Betrag / Kaufpreis, **abgerundet** auf die Größenschrittweite des
-   Paares. Liegt der Orderwert unter **Mindestwert einer Order (USDC)** (mindestens 10 USDC,
-   Hyperliquid-Minimum), wird der Kauf abgelehnt und das Log zeigt „Value too low“.
+4. **Betrag.** Gemäß **Betrag jedes Kaufs** im Block des aktuellen Markts:
+   - **% des Guthabens**: Betrag = dieser % × das **verfügbare** USDC (nicht bereits durch
+     offene Orders gebunden);
+   - **Feste USDC**: Betrag = dieser Wert, mindestens 10 USDC + Hyperliquid-Kaufgebühren
+     (10,01 USDC mit den Basisgebühren). Ist das verfügbare USDC geringer, **wird kein Kauf
+     platziert** und ein Fehler wird im Log erfasst;
+   - Menge = Betrag / Kaufpreis, **abgerundet** auf die Größenschrittweite des Paares (bei
+     festen USDC ein Schritt mehr, wenn die Rundung den Wert unter das Minimum bringt);
+   - liegt der Orderwert unter **Mindestwert einer Order (USDC)** (mindestens 10 USDC,
+     Hyperliquid-Minimum), wird der Kauf abgelehnt und das Log zeigt „Value too low“.
 5. **Order.** Eine Limit-Kauforder wird zum Kaufpreis platziert. Der Zyklus erscheint im
    Dashboard als **Kauf ausstehend**, mit dem bereits gespeicherten Ziel-Verkaufspreis.
 6. **Pause.** Nach jedem Versuch, ob platziert oder nicht, wartet das Paar **Pause nach einem Versuch
@@ -263,8 +269,10 @@ Ein perp-Zyklus besteht aus einem Einstieg (long oder short) und anschließend e
    des Paares auf Hyperliquid.
 6. **Preise und Größe.** Mit *P* = aktueller Preis: Einstieg = *P* + Einstiegs-Offset der Seite,
    Take-Profit = *P* + Take-Profit-Offset der Seite (USDC oder % gemäß **Offset-Einheit**).
-   Verwendete Margin = **% der verfügbaren Margin** × verfügbare Margin; Größe = Margin × Hebel
-   / Einstiegspreis, abgerundet.
+   Margin gemäß **Margin jedes Einstiegs**: **% der Margin** × verfügbare Margin oder **Feste USDC**
+   (Margin × Hebel von mindestens 10 USDC + Gebühren; ist die verfügbare Margin geringer, wird
+   kein Einstieg platziert und ein Fehler im Log erfasst). Größe = Margin × Hebel /
+   Einstiegspreis, abgerundet.
 7. **Einstieg.** Limit-Order zum Einstiegspreis. Sobald sie ausgeführt ist, platziert der Bot einen
    **Take-Profit** (Limit, reduce-only) zum gespeicherten Preis und einen **Stop-Loss** (Stop-Market,
    reduce-only) bei **Stop-Loss (% des Einstiegspreises)** vom tatsächlichen Einstiegspreis.
@@ -312,7 +320,7 @@ Ein Block für BULL, einer für BEAR, einer für RANGE:
 | Verkäufe aktiviert | derzeit ohne Wirkung: Verkäufe werden immer platziert |
 | Kauf-Offset | Kaufpreis = aktueller Preis + dieser Offset (normalerweise negativ); in RANGE durch den dynamischen Offset ersetzt |
 | Verkaufs-Offset | Ziel-Verkaufspreis = aktueller Preis + dieser Offset; in RANGE durch den dynamischen Offset ersetzt |
-| % des USDC-Guthabens | Anteil des verfügbaren USDC, der für jeden Kauf verwendet wird |
+| Betrag jedes Kaufs | **% des Guthabens**: Anteil des verfügbaren USDC, der für jeden Kauf verwendet wird; **Feste USDC**: gleicher Betrag bei jedem Kauf, mindestens 10 USDC + Hyperliquid-Kaufgebühren |
 | Pause nach einem Versuch (min) | Wartezeit nach jedem Kaufversuch in diesem Markt |
 | Intervall zwischen Käufen (min) | Mindestzeit zwischen zwei Kaufversuchen; der kleinste Wert der drei Blöcke wird verwendet |
 
@@ -340,7 +348,7 @@ Ein Block für BULL, einer für BEAR, einer für RANGE:
 | Richtung | `long`, `short`, `both` oder `none` (kein Einstieg) |
 | Long-Einstiegs-Offset / Long-Take-Profit-Offset | der Take-Profit muss über dem Einstieg liegen |
 | Short-Einstiegs-Offset / Short-Take-Profit-Offset | der Take-Profit muss unter dem Einstieg liegen |
-| % der verfügbaren Margin | Anteil der verfügbaren Margin, der für jeden Einstieg verwendet wird, gleich für Long und Short |
+| Margin jedes Einstiegs | **% der Margin** (verfügbar) oder **Feste USDC** (Margin × Hebel von mindestens 10 USDC + Gebühren); gleich für Long und Short |
 | Pause nach einem Versuch (min) | Wartezeit nach jedem Einstiegsversuch in diesem Markt |
 | Intervall zwischen Einstiegen (min) | Mindestzeit zwischen zwei Einstiegsversuchen; der kleinste Wert der drei Blöcke wird verwendet |
 
@@ -376,7 +384,7 @@ Wert wieder her. Die Wallet-Adresse und der Schlüssel des API wallet werden nic
 | Verkäufe aktiviert (global), Verkäufe in BULL / BEAR / RANGE | — | derzeit ohne Wirkung |
 
 **BULL- / BEAR- / RANGE-Markt — Standardwerte für neue spot-Paare**: Kauf- und Verkaufs-Offsets (USDC),
-% des USDC-Guthabens, Pause nach einem Versuch, Intervall zwischen Käufen. Sie füllen ein spot-Paar vor,
+% des USDC-Guthabens, Kaufbetrag (% des USDC-Guthabens oder Festbetrag; Standard: %), Festbetrag (Standard 15 USDC), Pause nach einem Versuch, Intervall zwischen Käufen. Sie füllen ein spot-Paar vor,
 wenn es hinzugefügt wird; **ihre Änderung wirkt sich nicht auf bereits hinzugefügte Paare aus**. Der RANGE-Block
 enthält außerdem:
 
@@ -576,7 +584,7 @@ Unabhängig vom Typ können Sie das API-Wallet jederzeit auf Hyperliquid widerru
 
 | Flux-Feld | Wert |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.4` |
+| Image | `olivier1246/hl-spot:1.0.5` |
 | Port und Container-Port | `60000` |
 | Container-Daten | `g:/data` (**erforderlich**) |
 | CPU | 0,2 |
@@ -647,7 +655,7 @@ der in `/etc/hl-spot/hl-spot.env` gespeichert ist.
 
 - Status und Log des Dienstes: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
 - **Update**: Laden Sie das neue Skript herunter und führen Sie es erneut mit der Version als
-  zweitem Parameter aus (z. B. `sudo sh install-linux.sh <Adresse> 1.0.5`). Ihre Daten bleiben
+  zweitem Parameter aus (z. B. `sudo sh install-linux.sh <Adresse> 1.0.6`). Ihre Daten bleiben
   erhalten.
 
 ### Docker
