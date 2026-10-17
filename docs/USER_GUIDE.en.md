@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.0.5
+Version 1.0.6
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -58,7 +58,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.0.5-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.0.6-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -66,8 +66,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.0.5-prod-linux-x64.zip
-cd HL-Spot-1.0.5-prod-linux-x64
+unzip HL-Spot-1.0.6-prod-linux-x64.zip
+cd HL-Spot-1.0.6-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.5-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.5
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -539,8 +539,20 @@ it.
 
 ## 14. Updates and backup
 
+When a new version is published, the bot shows a banner at the top of every page (check at
+start-up, then every 6 hours):
+
+- **blue banner**: a new version is available. The **Ignore this version** button hides it until
+  the next version;
+- **red banner**: **important** update (a security fix, for example), to install as soon as
+  possible; it cannot be ignored.
+
+If Telegram notifications are enabled (section 9), a message is sent only once per new version.
+The bot never downloads or installs anything by itself: the banner link opens the page of the
+version on GitHub.
+
 - **Update**: install the new version (unzip it, or load the new Docker image); your data
-  are kept (section 4).
+  are kept (section 4). On Flux: section 16; on a VPS: section 17.
 - **Backup**: copy the data folder (section 4). The `.env` file and the `secret.key` file go
   **together**: the encrypted values of `.env` and of the database cannot be read without
   `secret.key`. If `secret.key` is lost, these values (API wallet key, Telegram token…) must
@@ -582,7 +594,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.5` |
+| Image | `olivier1246/hl-spot:1.0.6` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |
@@ -650,7 +662,7 @@ The script installs Caddy, downloads HL-Spot and checks its SHA-256 checksum, cr
 
 - Service status and log: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
 - **Update**: download the new script and run it again with the version as second parameter
-  (e.g. `sudo sh install-linux.sh <address> 1.0.6`). Your data is kept.
+  (e.g. `sudo sh install-linux.sh <address> 1.0.7`). Your data is kept.
 
 ### Docker
 

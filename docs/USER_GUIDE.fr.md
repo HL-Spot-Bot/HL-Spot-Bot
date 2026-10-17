@@ -1,6 +1,6 @@
 # HL-Spot — Guide d'utilisation
 
-Version 1.0.5
+Version 1.0.6
 
 HL-Spot est un bot de trading pour **Hyperliquid** : marchés spot et perpétuels (perp),
 plusieurs paires, ordres automatiques et manuels. Il tourne **sur votre propre ordinateur**
@@ -60,7 +60,7 @@ téléchargement est intact.
 
 ### Windows
 
-1. Décompressez `HL-Spot-1.0.5-prod-windows-x64.zip`.
+1. Décompressez `HL-Spot-1.0.6-prod-windows-x64.zip`.
 2. Dans le dossier décompressé, lancez **`HL-Spot.exe`**. Une fenêtre de console s'ouvre :
    laissez-la ouverte tant que le bot tourne.
 3. Ouvrez **http://localhost:60000** dans votre navigateur.
@@ -68,8 +68,8 @@ téléchargement est intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 ou plus récent)
 
 ```
-unzip HL-Spot-1.0.5-prod-linux-x64.zip
-cd HL-Spot-1.0.5-prod-linux-x64
+unzip HL-Spot-1.0.6-prod-linux-x64.zip
+cd HL-Spot-1.0.6-prod-linux-x64
 ./hl-spot
 ```
 
@@ -78,9 +78,9 @@ Puis ouvrez **http://localhost:60000** dans votre navigateur.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.5-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.5
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
 ```
 
 - `-p 60000:60000` est obligatoire pour accéder à la page web.
@@ -550,8 +550,20 @@ principal.
 
 ## 14. Mises à jour et sauvegarde
 
+Quand une nouvelle version est publiée, le bot l'annonce par un bandeau en haut de toutes les
+pages (vérification au démarrage, puis toutes les 6 heures) :
+
+- **bandeau bleu** : une nouvelle version est disponible. Le bouton **Ignorer cette version** le
+  masque jusqu'à la version suivante ;
+- **bandeau rouge** : mise à jour **importante** (correctif de sécurité, par exemple), à installer
+  dès que possible ; il ne peut pas être ignoré.
+
+Si les notifications Telegram sont activées (section 9), un message est envoyé une seule fois par
+nouvelle version. Le bot ne télécharge et n'installe jamais rien lui-même : le lien du bandeau
+ouvre la page de la version sur GitHub.
+
 - **Mise à jour** : installez la nouvelle version (décompressez-la, ou chargez la nouvelle
-  image Docker) ; vos données sont gardées (section 4).
+  image Docker) ; vos données sont gardées (section 4). Sur Flux : section 16 ; sur un VPS : section 17.
 - **Sauvegarde** : copiez le dossier des données (section 4). Le fichier `.env` et le fichier
   `secret.key` vont **ensemble** : les valeurs chiffrées du `.env` et de la base ne peuvent pas être
   lues sans `secret.key`. Si `secret.key` est perdu, ces valeurs (clé de l'API wallet, token
@@ -596,7 +608,7 @@ Quel que soit le type, vous pouvez révoquer l'API wallet sur Hyperliquid à tou
 
 | Champ Flux | Valeur |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.5` |
+| Image | `olivier1246/hl-spot:1.0.6` |
 | Port et port du conteneur | `60000` |
 | Données du conteneur | `g:/data` (**obligatoire**) |
 | CPU | 0,2 |
@@ -666,7 +678,7 @@ pare-feu `ufw` (SSH, 80, 443). Il affiche à la fin le **code de premier lanceme
 
 - État et journal du service : `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
 - **Mise à jour** : téléchargez le nouveau script et relancez-le avec la version en second
-  paramètre (ex. `sudo sh install-linux.sh <adresse> 1.0.6`). Vos données sont gardées.
+  paramètre (ex. `sudo sh install-linux.sh <adresse> 1.0.7`). Vos données sont gardées.
 
 ### Docker
 

@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.5
+版本 1.0.6
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -44,15 +44,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.5-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.6-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.5-prod-linux-x64.zip
-cd HL-Spot-1.0.5-prod-linux-x64
+unzip HL-Spot-1.0.6-prod-linux-x64.zip
+cd HL-Spot-1.0.6-prod-linux-x64
 ./hl-spot
 ```
 
@@ -61,9 +61,9 @@ cd HL-Spot-1.0.5-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.5-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.5
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -415,7 +415,14 @@ BULL、BEAR、RANGE 各一个区块：
 
 ## 14. 更新与备份
 
-- **更新**：安装新版本（解压，或加载新的 Docker 镜像）；您的数据会被保留（第 4 节）。
+发布新版本时，机器人会在所有页面顶部显示横幅（启动时检查，之后每 6 小时检查一次）：
+
+- **蓝色横幅**：有新版本可用。点击 **忽略此版本** 按钮可将其隐藏，直到下一个版本发布；
+- **红色横幅**：**重要**更新（例如安全修复），请尽快安装；此横幅不能忽略。
+
+如果已启用 Telegram 通知（第 9 节），每个新版本只发送一次消息。机器人从不自行下载或安装任何内容：横幅中的链接会打开 GitHub 上该版本的页面。
+
+- **更新**：安装新版本（解压，或加载新的 Docker 镜像）；您的数据会被保留（第 4 节）。在 Flux 上：第 16 节；在 VPS 上：第 17 节。
 - **备份**：复制数据文件夹（第 4 节）。`.env` 文件和 `secret.key` 文件必须**一起**备份：没有 `secret.key`，就无法读取 `.env` 和数据库中的加密值。如果丢失了 `secret.key`，这些值（API wallet 密钥、Telegram token…）必须重新输入。
 
 ## 15. 从另一台机器访问
@@ -443,7 +450,7 @@ BULL、BEAR、RANGE 各一个区块：
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.5` |
+| 镜像 | `olivier1246/hl-spot:1.0.6` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
@@ -491,7 +498,7 @@ sudo sh install-linux.sh <公网 IP 地址或域名>
 该脚本会安装 Caddy，下载 HL-Spot 并校验其 SHA-256 校验和，创建 `hl-spot` 服务（自动启动，数据位于 `/var/lib/hl-spot`），并配置 HTTPS 和 `ufw` 防火墙（SSH、80、443）。最后，它会显示保存在 `/etc/hl-spot/hl-spot.env` 中的**首次启动代码**。
 
 - 服务状态和日志：`sudo systemctl status hl-spot`、`journalctl -u hl-spot -f`。
-- **更新**：下载新脚本，并以版本号作为第二个参数再次运行（例如 `sudo sh install-linux.sh <地址> 1.0.6`）。您的数据会保留。
+- **更新**：下载新脚本，并以版本号作为第二个参数再次运行（例如 `sudo sh install-linux.sh <地址> 1.0.7`）。您的数据会保留。
 
 ### Docker
 
