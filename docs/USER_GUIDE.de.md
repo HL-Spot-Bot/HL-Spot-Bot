@@ -1,6 +1,6 @@
 # HL-Spot — Benutzerhandbuch
 
-Version 1.0.6
+Version 1.0.7
 
 HL-Spot ist ein Trading-Bot für **Hyperliquid**: spot- und Perpetual-Märkte (perp), mehrere Paare,
 automatische und manuelle Orders. Er läuft **auf Ihrem eigenen Computer** (Windows, Linux oder Docker), und Sie
@@ -58,7 +58,7 @@ unbeschädigt ist.
 
 ### Windows
 
-1. Entpacken Sie `HL-Spot-1.0.6-prod-windows-x64.zip`.
+1. Entpacken Sie `HL-Spot-1.0.7-prod-windows-x64.zip`.
 2. Starten Sie im entpackten Ordner **`HL-Spot.exe`**. Ein Konsolenfenster öffnet sich: Lassen Sie es geöffnet, solange
    der Bot läuft.
 3. Öffnen Sie **http://localhost:60000** in Ihrem Browser.
@@ -66,8 +66,8 @@ unbeschädigt ist.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 oder neuer)
 
 ```
-unzip HL-Spot-1.0.6-prod-linux-x64.zip
-cd HL-Spot-1.0.6-prod-linux-x64
+unzip HL-Spot-1.0.7-prod-linux-x64.zip
+cd HL-Spot-1.0.7-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ cd HL-Spot-1.0.6-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
 ```
 
 - `-p 60000:60000` ist erforderlich, um die Webseite zu erreichen.
@@ -138,10 +138,10 @@ Das Menü oben bietet Zugriff auf:
 
 | Seite | Verwendung |
 |---|---|
-| 📊 Dashboard | ein Tab pro spot-Paar: seine Zyklen und sein Marktstatus |
+| 📊 Dashboard | Ihr Hyperliquid-Portfolio (Guthaben, PNL), der Live-Preis des Paares im aktiven Tab und ein Tab pro spot-Paar: seine Zyklen und sein Marktstatus; Schaltfläche **Abbrechen** bei laufenden Zyklen |
 | 📈 Statistiken | Ergebnisse der spot- und perp-Zyklen nach Zeitraum |
 | 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare und ihre Einstellungen |
-| 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare |
+| 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare; Schaltflächen **Abbrechen** und **Schließen** |
 | 🖐️ Manuelle Orders | Platzieren Sie eine Order manuell; der Bot verfolgt den Zyklus dann wie die anderen |
 | 🌐 Hyperliquid-Paare | Liste der spot- und perp-Paare von Hyperliquid; fügen Sie hier ein Paar zum Bot hinzu |
 | ⚙️ Einstellungen | globale Einstellungen (ohne Neustart übernommen, außer Port und Listen-Adresse) |
@@ -436,6 +436,48 @@ Intervall 180 min.
 |---|---|---|
 | Warnungen aufzeichnen | nein | Fehler werden immer aufgezeichnet; Warnungen nur, wenn aktiviert (Abschnitt 12) |
 
+### 6.6 Dashboard: Portfolio, Preis, Stornieren eines Zyklus
+
+Rahmen **Hyperliquid-Portfolio**:
+
+- **Gesamtwert** des Kontos in USDC.
+- **PNL** über 24 h, 7 Tage, 30 Tage und insgesamt, auf zwei Arten:
+  **Hyperliquid (gesamtes Konto)**, von Hyperliquid berechnet, einschließlich der außerhalb des
+  Bots ausgeführten Operationen; **Bot (abgeschlossene Zyklen)**, der Nettogewinn der vom Bot
+  abgeschlossenen Zyklen.
+- Eine Zeile pro Asset: **Gesamt**, **Verfügbar**, **In Orders** (durch offene Orders gebunden),
+  **Preis** und **Wert (USDC)**. Die Zeile **Perp-Konto** zeigt die Margin des perp-Kontos. Ist
+  Ihr Hyperliquid-Konto im Unified-Modus, wird die perp-Margin aus dem USDC-Guthaben entnommen:
+  Dann wird nur der unrealisierte PnL der Positionen zur Summe addiert.
+
+Rahmen **Preis**: Live-Preis des Paares im aktiven Tab (alle 5 Sekunden aktualisiert) und seine
+Änderung über 24 h.
+
+Schaltfläche **Abbrechen** (Dashboard, laufende spot-Zyklen), nach Bestätigung:
+
+- **Kauf ausstehend**: Die Kauforder wird auf Hyperliquid storniert. Wurde bereits ein Teil
+  gekauft, bleibt dieser Teil auf Ihrem Konto.
+- **Verkauf ausstehend**: Die Verkaufsorder wird storniert; die Kryptowährung bleibt auf Ihrem
+  Konto.
+
+Der Zyklus erhält den Status **Storniert** (Filter **Storniert**) und wird nicht mehr vom Bot
+verwaltet. Beim nächsten Durchlauf kann der Bot einen neuen Kauf platzieren, wenn der Markt es
+zulässt: Um ein Paar zu stoppen, deaktivieren Sie es (Seite **Gehandelte Paare**).
+
+Seite **Perp-Zyklen**, nach Bestätigung:
+
+- **Abbrechen** (ausstehender Einstieg): Die Einstiegsorder wird storniert. Wurde bereits ein
+  Teil ausgeführt, wird dieser Teil zum Marktpreis geschlossen; schlägt diese Schließung fehl,
+  behält er seinen Take-Profit und Stop-Loss.
+- **Schließen** (offene Position): Die Position wird zum Marktpreis geschlossen. Take-Profit und
+  Stop-Loss werden erst storniert, sobald die Schließungsorder platziert ist: Schlägt die
+  Schließungsorder fehl, behält die Position ihren Schutz.
+- Keine Schaltfläche, während eine Schließung läuft.
+
+Ein Zyklus wird erst als storniert markiert, wenn Hyperliquid bestätigt, dass die Order nicht
+mehr aktiv ist. Wurde die Order gerade ausgeführt, wird die Stornierung abgelehnt und der Zyklus
+läuft normal weiter. Diese Aktionen können nicht rückgängig gemacht werden.
+
 ## 7. Lizenz und Abonnement
 
 ### Preise
@@ -596,7 +638,7 @@ Unabhängig vom Typ können Sie das API-Wallet jederzeit auf Hyperliquid widerru
 
 | Flux-Feld | Wert |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.6` |
+| Image | `olivier1246/hl-spot:1.0.7` |
 | Port und Container-Port | `60000` |
 | Container-Daten | `g:/data` (**erforderlich**) |
 | CPU | 0,2 |
@@ -677,7 +719,7 @@ sudo systemctl start hl-spot       # starten
 ```
 
 - **Update**: Laden Sie das neue Skript herunter und führen Sie es erneut mit der Version als
-  zweitem Parameter aus (z. B. `sudo sh install-linux.sh <Adresse> 1.0.7`). Ihre Daten bleiben
+  zweitem Parameter aus (z. B. `sudo sh install-linux.sh <Adresse> 1.0.8`). Ihre Daten bleiben
   erhalten.
 
 ### Docker

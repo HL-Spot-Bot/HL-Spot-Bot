@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.0.6
+Version 1.0.7
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -58,7 +58,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.0.6-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.0.7-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -66,8 +66,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.0.6-prod-linux-x64.zip
-cd HL-Spot-1.0.6-prod-linux-x64
+unzip HL-Spot-1.0.7-prod-linux-x64.zip
+cd HL-Spot-1.0.7-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -138,10 +138,10 @@ The menu at the top gives access to:
 
 | Page | Use |
 |---|---|
-| 📊 Dashboard | one tab per spot pair: its cycles and its market status |
+| 📊 Dashboard | your Hyperliquid portfolio (balances, PNL), the live price of the pair of the active tab, and one tab per spot pair: its cycles and its market status; **Cancel** button on cycles in progress |
 | 📈 Statistics | spot and perp cycle results, by period |
 | 🧩 Traded pairs | spot and perp pairs configured for the bot, and their settings |
-| 🟣 Perp cycles | entries, take-profits, stop-losses and closes of perp pairs |
+| 🟣 Perp cycles | entries, take-profits, stop-losses and closes of perp pairs; **Cancel** and **Close** buttons |
 | 🖐️ Manual orders | place an order by hand; the bot then follows the cycle like the others |
 | 🌐 Hyperliquid pairs | list of Hyperliquid spot and perp pairs; add a pair to the bot from here |
 | ⚙️ Settings | global settings (applied without restart, except port and listening address) |
@@ -436,6 +436,46 @@ interval 180 min.
 |---|---|---|
 | Record warnings | no | errors are always recorded; warnings only if enabled (section 12) |
 
+### 6.6 Dashboard: portfolio, price, cancelling a cycle
+
+**Hyperliquid portfolio** frame:
+
+- **Total value** of the account, in USDC.
+- **PNL** over 24 h, 7 days, 30 days and in total, in two ways: **Hyperliquid (whole account)**,
+  as computed by Hyperliquid, including operations made outside the bot; **Bot (completed
+  cycles)**, the net profit of the cycles completed by the bot.
+- One row per asset: **Total**, **Available**, **In orders** (blocked by open orders),
+  **Price** and **Value (USDC)**. The **Perp account** row gives the margin of the perp
+  account. If your Hyperliquid account is in unified mode, the perp margin is taken from the
+  USDC balance: only the unrealized PnL of the positions is then added to the total.
+
+**Price** frame: live price of the pair of the active tab (updated every 5 seconds) and its
+24 h change.
+
+**Cancel** button (dashboard, spot cycles in progress), after confirmation:
+
+- **Pending buy**: the buy order is cancelled on Hyperliquid. If part of it was already bought,
+  that part stays in your account.
+- **Pending sell**: the sell order is cancelled; the crypto stays in your account.
+
+The cycle becomes **Cancelled** (**Cancelled** filter) and the bot no longer manages it. At
+its next round the bot may place a new buy if the market allows it: to stop a pair, disable it
+(**Traded pairs** page).
+
+**Perp cycles** page, after confirmation:
+
+- **Cancel** (entry pending): the entry order is cancelled. If part of it was already filled,
+  that part is closed at the market price; if this close fails, it keeps its take-profit and
+  stop-loss.
+- **Close** (open position): the position is closed at the market price. Its take-profit and
+  stop-loss are cancelled only once the close order is placed: if the close order fails, the
+  position keeps its protection.
+- No button while a close is in progress.
+
+A cycle is marked cancelled only when Hyperliquid confirms that the order is no longer active.
+If the order has just been filled, the cancellation is refused and the cycle continues
+normally. These actions cannot be undone.
+
 ## 7. License and subscription
 
 ### Prices
@@ -594,7 +634,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.6` |
+| Image | `olivier1246/hl-spot:1.0.7` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |
@@ -672,7 +712,7 @@ sudo systemctl start hl-spot       # start
 ```
 
 - **Update**: download the new script and run it again with the version as second parameter
-  (e.g. `sudo sh install-linux.sh <address> 1.0.7`). Your data is kept.
+  (e.g. `sudo sh install-linux.sh <address> 1.0.8`). Your data is kept.
 
 ### Docker
 

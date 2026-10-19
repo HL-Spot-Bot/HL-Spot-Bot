@@ -1,6 +1,6 @@
 # HL-Spot — Guida utente
 
-Versione 1.0.6
+Versione 1.0.7
 
 HL-Spot è un bot di trading per **Hyperliquid**: mercati spot e perpetual (perp), più coppie,
 ordini automatici e manuali. Funziona **sul tuo computer** (Windows, Linux o Docker) e lo
@@ -58,7 +58,7 @@ integro.
 
 ### Windows
 
-1. Decomprimi `HL-Spot-1.0.6-prod-windows-x64.zip`.
+1. Decomprimi `HL-Spot-1.0.7-prod-windows-x64.zip`.
 2. Nella cartella decompressa, esegui **`HL-Spot.exe`**. Si apre una finestra di console: tienila aperta finché
    il bot è in funzione.
 3. Apri **http://localhost:60000** nel tuo browser.
@@ -66,8 +66,8 @@ integro.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 o successivi)
 
 ```
-unzip HL-Spot-1.0.6-prod-linux-x64.zip
-cd HL-Spot-1.0.6-prod-linux-x64
+unzip HL-Spot-1.0.7-prod-linux-x64.zip
+cd HL-Spot-1.0.7-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Poi apri **http://localhost:60000** nel tuo browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.6-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.6
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
 ```
 
 - `-p 60000:60000` è necessario per raggiungere la pagina web.
@@ -138,10 +138,10 @@ Il menu in alto dà accesso a:
 
 | Pagina | Uso |
 |---|---|
-| 📊 Dashboard | una scheda per coppia spot: i suoi cicli e lo stato del suo mercato |
+| 📊 Dashboard | il tuo portafoglio Hyperliquid (saldi, PNL), il prezzo in tempo reale della coppia della scheda attiva e una scheda per coppia spot: i suoi cicli e lo stato del suo mercato; pulsante **Annulla** sui cicli in corso |
 | 📈 Statistiche | Risultati dei cicli spot e perp, per periodo |
 | 🧩 Coppie negoziate | Coppie spot e perp configurate per il bot, e le loro impostazioni |
-| 🟣 Cicli perp | Entrate, take-profit, stop-loss e chiusure delle coppie perp |
+| 🟣 Cicli perp | Entrate, take-profit, stop-loss e chiusure delle coppie perp; pulsanti **Annulla** e **Chiudi** |
 | 🖐️ Ordini manuali | Piazza un ordine manualmente; il bot segue poi il ciclo come gli altri |
 | 🌐 Coppie Hyperliquid | Elenco delle coppie spot e perp di Hyperliquid; da qui aggiungi una coppia al bot |
 | ⚙️ Impostazioni | Impostazioni globali (applicate senza riavvio, tranne porta e indirizzo di ascolto) |
@@ -436,6 +436,46 @@ intervallo 180 min.
 |---|---|---|
 | Registra gli avvisi | no | gli errori vengono sempre registrati; gli avvisi solo se attivati (sezione 12) |
 
+### 6.6 Dashboard: portafoglio, prezzo, annullamento di un ciclo
+
+Riquadro **Portafoglio Hyperliquid**:
+
+- **Valore totale** dell'account, in USDC.
+- **PNL** su 24 h, 7 giorni, 30 giorni e in totale, in due modi: **Hyperliquid (intero account)**,
+  calcolato da Hyperliquid, comprese le operazioni effettuate al di fuori del bot;
+  **Bot (cicli completati)**, il profitto netto dei cicli completati dal bot.
+- Una riga per asset: **Totale**, **Disponibile**, **In ordini** (bloccato da ordini aperti),
+  **Prezzo** e **Valore (USDC)**. La riga **Account perp** indica il margine dell'account perp.
+  Se il tuo account Hyperliquid è in modalità unificata, il margine perp è prelevato dal saldo
+  USDC: al totale viene quindi aggiunto solo il PnL non realizzato delle posizioni.
+
+Riquadro **Prezzo**: prezzo in tempo reale della coppia della scheda attiva (aggiornato ogni
+5 secondi) e la sua variazione su 24 h.
+
+Pulsante **Annulla** (dashboard, cicli spot in corso), dopo conferma:
+
+- **Acquisto in attesa**: l'ordine di acquisto viene annullato su Hyperliquid. Se una parte è già
+  stata acquistata, quella parte resta nel tuo account.
+- **Vendita in attesa**: l'ordine di vendita viene annullato; le crypto restano nel tuo account.
+
+Il ciclo passa allo stato **Annullato** (filtro **Annullato**) e il bot non lo gestisce più. Al
+passaggio successivo il bot può piazzare un nuovo acquisto se il mercato lo consente: per fermare
+una coppia, disattivala (pagina **Coppie negoziate**).
+
+Pagina **Cicli perp**, dopo conferma:
+
+- **Annulla** (entrata in attesa): l'ordine di entrata viene annullato. Se una parte è già stata
+  eseguita, quella parte viene chiusa al prezzo di mercato; se questa chiusura non riesce,
+  mantiene il suo take-profit e il suo stop-loss.
+- **Chiudi** (posizione aperta): la posizione viene chiusa al prezzo di mercato. Take-profit e
+  stop-loss vengono annullati solo dopo che l'ordine di chiusura è stato piazzato: se l'ordine di
+  chiusura non riesce, la posizione mantiene la sua protezione.
+- Nessun pulsante mentre è in corso una chiusura.
+
+Un ciclo viene segnato come annullato solo quando Hyperliquid conferma che l'ordine non è più
+attivo. Se l'ordine è appena stato eseguito, l'annullamento viene rifiutato e il ciclo prosegue
+normalmente. Queste azioni sono irreversibili.
+
 ## 7. Licenza e abbonamento
 
 ### Prezzi
@@ -596,7 +636,7 @@ Qualunque sia il tipo, puoi revocare l'API wallet su Hyperliquid in qualsiasi mo
 
 | Campo Flux | Valore |
 |---|---|
-| Immagine | `olivier1246/hl-spot:1.0.6` |
+| Immagine | `olivier1246/hl-spot:1.0.7` |
 | Porta e porta del container | `60000` |
 | Dati del container | `g:/data` (**obbligatorio**) |
 | CPU | 0,2 |
@@ -674,7 +714,7 @@ sudo systemctl start hl-spot       # avviare
 ```
 
 - **Aggiornamento**: scarica il nuovo script ed eseguilo di nuovo con la versione come secondo parametro
-  (ad es. `sudo sh install-linux.sh <indirizzo> 1.0.7`). I tuoi dati vengono conservati.
+  (ad es. `sudo sh install-linux.sh <indirizzo> 1.0.8`). I tuoi dati vengono conservati.
 
 ### Docker
 

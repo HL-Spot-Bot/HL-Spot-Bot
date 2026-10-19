@@ -1,4 +1,4 @@
-# HL-Spot - VPS with Docker: bot + Caddy HTTPS proxy (1.0.4, image 1.0.6)
+# HL-Spot - VPS with Docker: bot + Caddy HTTPS proxy (1.0.4, image 1.0.7)
 #
 # 1. Put in one folder: docker-compose.yml, Caddyfile.ip, Caddyfile.domain and a .env file:
 #        HL_SPOT_SITE=203.0.113.10          public IP address of the VPS, or your domain name
@@ -19,7 +19,7 @@
 # domain no AAAA record, or enable IPv6 in Docker.
 services:
   hl-spot:
-    image: olivier1246/hl-spot:1.0.6
+    image: olivier1246/hl-spot:1.0.7
     container_name: hl-spot
     restart: unless-stopped
     environment:
