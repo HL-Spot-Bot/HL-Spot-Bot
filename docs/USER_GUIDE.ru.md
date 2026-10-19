@@ -657,7 +657,17 @@ sudo sh install-linux.sh <публичный IP-адрес или доменно
 HTTPS и брандмауэр `ufw` (SSH, 80, 443). В конце он показывает **Код первого запуска**,
 сохранённый в `/etc/hl-spot/hl-spot.env`.
 
-- Состояние службы и журнал: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+Бот работает как служба systemd `hl-spot`: он запускается вместе с машиной, а если
+останавливается, автоматически перезапускается через 10 секунд. Команды службы:
+
+```
+sudo systemctl status hl-spot      # состояние
+journalctl -u hl-spot -f           # журнал в реальном времени
+sudo systemctl restart hl-spot     # перезапустить
+sudo systemctl stop hl-spot        # остановить (до следующего запуска машины)
+sudo systemctl start hl-spot       # запустить
+```
+
 - **Обновление**: скачайте новый скрипт и запустите его снова, указав версию вторым параметром
   (например, `sudo sh install-linux.sh <адрес> 1.0.7`). Ваши данные сохраняются.
 

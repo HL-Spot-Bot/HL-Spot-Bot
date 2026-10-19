@@ -660,7 +660,17 @@ The script installs Caddy, downloads HL-Spot and checks its SHA-256 checksum, cr
 `ufw` firewall (SSH, 80, 443). At the end it shows the **first-launch code**, kept in
 `/etc/hl-spot/hl-spot.env`.
 
-- Service status and log: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+The bot runs as the systemd service `hl-spot`: it starts with the machine and, if it stops, it is
+restarted automatically after 10 seconds. Service commands:
+
+```
+sudo systemctl status hl-spot      # status
+journalctl -u hl-spot -f           # live log
+sudo systemctl restart hl-spot     # restart
+sudo systemctl stop hl-spot        # stop (until the next start of the machine)
+sudo systemctl start hl-spot       # start
+```
+
 - **Update**: download the new script and run it again with the version as second parameter
   (e.g. `sudo sh install-linux.sh <address> 1.0.7`). Your data is kept.
 

@@ -676,7 +676,17 @@ Le script installe Caddy, télécharge HL-Spot et vérifie son empreinte SHA-256
 pare-feu `ufw` (SSH, 80, 443). Il affiche à la fin le **code de premier lancement**, gardé dans
 `/etc/hl-spot/hl-spot.env`.
 
-- État et journal du service : `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+Le bot tourne comme service systemd `hl-spot` : il démarre avec la machine et, s'il s'arrête, il
+est relancé automatiquement au bout de 10 secondes. Commandes du service :
+
+```
+sudo systemctl status hl-spot      # état
+journalctl -u hl-spot -f           # journal en direct
+sudo systemctl restart hl-spot     # redémarrer
+sudo systemctl stop hl-spot        # arrêter (jusqu'au prochain démarrage de la machine)
+sudo systemctl start hl-spot       # démarrer
+```
+
 - **Mise à jour** : téléchargez le nouveau script et relancez-le avec la version en second
   paramètre (ex. `sudo sh install-linux.sh <adresse> 1.0.7`). Vos données sont gardées.
 

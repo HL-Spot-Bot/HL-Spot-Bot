@@ -497,7 +497,16 @@ sudo sh install-linux.sh <公网 IP 地址或域名>
 
 该脚本会安装 Caddy，下载 HL-Spot 并校验其 SHA-256 校验和，创建 `hl-spot` 服务（自动启动，数据位于 `/var/lib/hl-spot`），并配置 HTTPS 和 `ufw` 防火墙（SSH、80、443）。最后，它会显示保存在 `/etc/hl-spot/hl-spot.env` 中的**首次启动代码**。
 
-- 服务状态和日志：`sudo systemctl status hl-spot`、`journalctl -u hl-spot -f`。
+机器人以 systemd 服务 `hl-spot` 运行：随机器启动；如果停止，会在 10 秒后自动重启。服务命令：
+
+```
+sudo systemctl status hl-spot      # 状态
+journalctl -u hl-spot -f           # 实时日志
+sudo systemctl restart hl-spot     # 重启
+sudo systemctl stop hl-spot        # 停止（直到机器下次启动）
+sudo systemctl start hl-spot       # 启动
+```
+
 - **更新**：下载新脚本，并以版本号作为第二个参数再次运行（例如 `sudo sh install-linux.sh <地址> 1.0.7`）。您的数据会保留。
 
 ### Docker

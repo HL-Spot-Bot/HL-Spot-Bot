@@ -665,7 +665,17 @@ den Dienst `hl-spot` (automatischer Start, Daten in `/var/lib/hl-spot`) und rich
 die Firewall `ufw` ein (SSH, 80, 443). Am Ende zeigt es den **Code für den ersten Start** an,
 der in `/etc/hl-spot/hl-spot.env` gespeichert ist.
 
-- Status und Log des Dienstes: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+Der Bot läuft als systemd-Dienst `hl-spot`: Er startet mit dem Rechner und wird, falls er
+anhält, nach 10 Sekunden automatisch neu gestartet. Befehle für den Dienst:
+
+```
+sudo systemctl status hl-spot      # Status
+journalctl -u hl-spot -f           # Log live
+sudo systemctl restart hl-spot     # neu starten
+sudo systemctl stop hl-spot        # anhalten (bis zum nächsten Start des Rechners)
+sudo systemctl start hl-spot       # starten
+```
+
 - **Update**: Laden Sie das neue Skript herunter und führen Sie es erneut mit der Version als
   zweitem Parameter aus (z. B. `sudo sh install-linux.sh <Adresse> 1.0.7`). Ihre Daten bleiben
   erhalten.

@@ -661,7 +661,17 @@ serviço `hl-spot` (arranque automático, dados em `/var/lib/hl-spot`) e configu
 firewall `ufw` (SSH, 80, 443). No final, mostra o **código de primeira inicialização**, guardado em
 `/etc/hl-spot/hl-spot.env`.
 
-- Estado do serviço e log: `sudo systemctl status hl-spot`, `journalctl -u hl-spot -f`.
+O bot funciona como serviço systemd `hl-spot`: arranca com a máquina e, se parar, é
+reiniciado automaticamente ao fim de 10 segundos. Comandos do serviço:
+
+```
+sudo systemctl status hl-spot      # estado
+journalctl -u hl-spot -f           # log em direto
+sudo systemctl restart hl-spot     # reiniciar
+sudo systemctl stop hl-spot        # parar (até ao próximo arranque da máquina)
+sudo systemctl start hl-spot       # iniciar
+```
+
 - **Atualização**: descarregue o novo script e execute-o novamente com a versão como segundo parâmetro
   (ex.: `sudo sh install-linux.sh <endereço> 1.0.7`). Os seus dados são mantidos.
 
