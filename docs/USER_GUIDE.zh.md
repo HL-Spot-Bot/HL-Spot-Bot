@@ -532,7 +532,12 @@ sudo systemctl stop hl-spot        # 停止（直到机器下次启动）
 sudo systemctl start hl-spot       # 启动
 ```
 
-- **更新**：下载新脚本，并以版本号作为第二个参数再次运行（例如 `sudo sh install-linux.sh <地址> 1.0.8`）。您的数据会保留。
+- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.8 版本为例：
+
+```
+curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
+sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.8
+```
 
 ### Docker
 

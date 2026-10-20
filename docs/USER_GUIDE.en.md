@@ -711,8 +711,14 @@ sudo systemctl stop hl-spot        # stop (until the next start of the machine)
 sudo systemctl start hl-spot       # start
 ```
 
-- **Update**: download the new script and run it again with the version as second parameter
-  (e.g. `sudo sh install-linux.sh <address> 1.0.8`). Your data is kept.
+- **Update**: download the new script and run it again with **the same address as for the
+  installation** (public IP address or domain name of the VPS, the one used to open the web
+  page) and the new version as second parameter. Your data is kept. Example for version 1.0.8:
+
+```
+curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
+sudo sh install-linux.sh <public IP address or domain name> 1.0.8
+```
 
 ### Docker
 
