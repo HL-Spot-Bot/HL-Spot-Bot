@@ -1,6 +1,6 @@
 # HL-Spot — Benutzerhandbuch
 
-Version 1.0.7
+Version 1.0.8
 
 HL-Spot ist ein Trading-Bot für **Hyperliquid**: spot- und Perpetual-Märkte (perp), mehrere Paare,
 automatische und manuelle Orders. Er läuft **auf Ihrem eigenen Computer** (Windows, Linux oder Docker), und Sie
@@ -58,7 +58,7 @@ unbeschädigt ist.
 
 ### Windows
 
-1. Entpacken Sie `HL-Spot-1.0.7-prod-windows-x64.zip`.
+1. Entpacken Sie `HL-Spot-1.0.8-prod-windows-x64.zip`.
 2. Starten Sie im entpackten Ordner **`HL-Spot.exe`**. Ein Konsolenfenster öffnet sich: Lassen Sie es geöffnet, solange
    der Bot läuft.
 3. Öffnen Sie **http://localhost:60000** in Ihrem Browser.
@@ -66,8 +66,8 @@ unbeschädigt ist.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 oder neuer)
 
 ```
-unzip HL-Spot-1.0.7-prod-linux-x64.zip
-cd HL-Spot-1.0.7-prod-linux-x64
+unzip HL-Spot-1.0.8-prod-linux-x64.zip
+cd HL-Spot-1.0.8-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ cd HL-Spot-1.0.7-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
 ```
 
 - `-p 60000:60000` ist erforderlich, um die Webseite zu erreichen.
@@ -142,7 +142,7 @@ Das Menü oben bietet Zugriff auf:
 | 📈 Statistiken | Ergebnisse der spot- und perp-Zyklen nach Zeitraum |
 | 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare und ihre Einstellungen |
 | 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare; Schaltflächen **Abbrechen** und **Schließen** |
-| 🖐️ Manuelle Orders | Platzieren Sie eine Order manuell; der Bot verfolgt den Zyklus dann wie die anderen |
+| 🖐️ Manuelle Orders | Platzieren Sie eine Order manuell: Spot-Kauf oder Perp-Einstieg (der Bot verfolgt den Zyklus dann wie die anderen), Spot-Verkauf (einfache Order, Abschnitt 6.7) |
 | 🌐 Hyperliquid-Paare | Liste der spot- und perp-Paare von Hyperliquid; fügen Sie hier ein Paar zum Bot hinzu |
 | ⚙️ Einstellungen | globale Einstellungen (ohne Neustart übernommen, außer Port und Listen-Adresse) |
 | 📝 Log | Fehler (und Warnungen, falls aktiviert) |
@@ -478,6 +478,36 @@ Ein Zyklus wird erst als storniert markiert, wenn Hyperliquid bestätigt, dass d
 mehr aktiv ist. Wurde die Order gerade ausgeführt, wird die Stornierung abgelehnt und der Zyklus
 läuft normal weiter. Diese Aktionen können nicht rückgängig gemacht werden.
 
+### 6.7 Manuelle Orders: Spot-Verkauf
+
+Wählen Sie auf der Seite **Manuelle Orders** ein Spot-Paar und dann **Verkauf**, um Kryptos zu
+verkaufen, die Sie besitzen (zum Beispiel die eines stornierten Zyklus).
+
+- **Nur aktives Paar**: Ein Verkauf ist nur bei einem aktivierten Paar möglich (Seite
+  **Gehandelte Paare**). Kaufen bleibt bei allen Paaren möglich.
+- **Verfügbar**: Guthaben der Krypto auf Hyperliquid, ohne die durch offene Orders gesperrten
+  Kryptos.
+- **Von den Zyklen des Bots reserviert**: Kryptos, die bereits von Zyklen des Bots gekauft
+  wurden und deren Verkaufsorder noch nicht platziert ist. Sie können hier nicht verkauft
+  werden, damit der Bot seine Verkäufe platzieren kann.
+- **Verkaufbares Maximum**: verfügbar minus reserviert, abgerundet auf die von Hyperliquid
+  akzeptierte Anzahl an Dezimalstellen. Die Schaltfläche **Max** übernimmt es in die Menge. Die
+  Kryptos eines stornierten Zyklus können verkauft werden.
+- **Order-Typ**:
+  - **Limit**: Verkauf zum angegebenen Preis (aktueller Preis vorgeschlagen, änderbar); die
+    Order bleibt offen, bis sie ausgeführt ist. Ein Preis unter dem aktuellen Preis wird in der
+    Bestätigung angezeigt: Der Verkauf wird dann sofort ausgeführt, bis zu diesem Preis.
+  - **Market**: sofortiger Verkauf zum besten verfügbaren Preis, nie unter dem aktuellen Preis
+    minus dem **Slippage** (standardmäßig 1 %, änderbar). Der Teil, der zu diesem Preis keinen
+    Käufer findet, wird storniert; die Meldung zeigt die verkaufte Menge.
+- **Geschätzter Betrag**: Menge × Preis (Mindestbetrag bei einer Market-Order). Hyperliquid
+  lehnt Orders unter 10 USDC ab.
+
+Eine Bestätigung fasst die Order vor dem Senden zusammen. Ein manueller Verkauf ist eine
+**einfache Order**: Er eröffnet keinen Zyklus, der Bot verfolgt ihn nicht und er zählt nicht
+zum PNL des Bots (Kaufpreis unbekannt); er erscheint im Hyperliquid-PNL des Dashboards. Eine
+noch nicht ausgeführte Limit-Order wird danach auf Hyperliquid verwaltet.
+
 ## 7. Lizenz und Abonnement
 
 ### Preise
@@ -638,7 +668,7 @@ Unabhängig vom Typ können Sie das API-Wallet jederzeit auf Hyperliquid widerru
 
 | Flux-Feld | Wert |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.7` |
+| Image | `olivier1246/hl-spot:1.0.8` |
 | Port und Container-Port | `60000` |
 | Container-Daten | `g:/data` (**erforderlich**) |
 | CPU | 0,2 |
@@ -721,11 +751,11 @@ sudo systemctl start hl-spot       # starten
 - **Update**: Laden Sie das neue Skript herunter und führen Sie es erneut aus, mit **derselben
   Adresse wie bei der Installation** (öffentliche IP-Adresse oder Domainname des VPS, über die
   die Weboberfläche geöffnet wird) und der neuen Version als zweitem Parameter. Ihre Daten
-  bleiben erhalten. Beispiel für Version 1.0.8:
+  bleiben erhalten. Beispiel für Version 1.0.9:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <öffentliche IP-Adresse oder Domainname> 1.0.8
+sudo sh install-linux.sh <öffentliche IP-Adresse oder Domainname> 1.0.9
 ```
 
 ### Docker

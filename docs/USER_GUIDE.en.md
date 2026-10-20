@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.0.7
+Version 1.0.8
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -58,7 +58,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.0.7-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.0.8-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -66,8 +66,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.0.7-prod-linux-x64.zip
-cd HL-Spot-1.0.7-prod-linux-x64
+unzip HL-Spot-1.0.8-prod-linux-x64.zip
+cd HL-Spot-1.0.8-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -142,7 +142,7 @@ The menu at the top gives access to:
 | 📈 Statistics | spot and perp cycle results, by period |
 | 🧩 Traded pairs | spot and perp pairs configured for the bot, and their settings |
 | 🟣 Perp cycles | entries, take-profits, stop-losses and closes of perp pairs; **Cancel** and **Close** buttons |
-| 🖐️ Manual orders | place an order by hand; the bot then follows the cycle like the others |
+| 🖐️ Manual orders | place an order by hand: spot buy or perp entry (the bot then follows the cycle like the others), spot sale (simple order, section 6.7) |
 | 🌐 Hyperliquid pairs | list of Hyperliquid spot and perp pairs; add a pair to the bot from here |
 | ⚙️ Settings | global settings (applied without restart, except port and listening address) |
 | 📝 Log | errors (and warnings if enabled) |
@@ -476,6 +476,35 @@ A cycle is marked cancelled only when Hyperliquid confirms that the order is no 
 If the order has just been filled, the cancellation is refused and the cycle continues
 normally. These actions cannot be undone.
 
+### 6.7 Manual orders: spot sale
+
+On the **Manual orders** page, choose a spot pair then **Sell** to sell cryptos you hold (for
+example those of a cancelled cycle).
+
+- **Enabled pair only**: a sale is only possible on an enabled pair (**Traded pairs** page).
+  Buying remains possible on all pairs.
+- **Available**: balance of the crypto on Hyperliquid, excluding cryptos locked by open
+  orders.
+- **Reserved by the bot cycles**: cryptos already bought by bot cycles whose sell order is not
+  placed yet. They cannot be sold here, so that the bot can place its sales.
+- **Sellable maximum**: available minus reserved, rounded down to the number of decimals
+  accepted by Hyperliquid. The **Max** button copies it into the quantity. The cryptos of a
+  cancelled cycle can be sold.
+- **Order type**:
+  - **limit**: sale at the price entered (current price proposed, can be changed); the order
+    stays open until it is filled. A price below the current price is flagged in the
+    confirmation: the sale is then executed at once, down to that price.
+  - **market**: immediate sale at the best available price, never below the current price
+    minus the **slippage** (1 % by default, can be changed). The part that finds no buyer at
+    that price is cancelled; the message shows the quantity sold.
+- **Estimated amount**: quantity × price (minimum amount for a market order). Hyperliquid
+  refuses orders below 10 USDC.
+
+A confirmation summarizes the order before it is sent. A manual sale is a **simple order**: it
+opens no cycle, the bot does not follow it and it is not counted in the bot PNL (buy price
+unknown); it appears in the Hyperliquid PNL of the dashboard. A limit order that is not filled
+yet is then managed on Hyperliquid.
+
 ## 7. License and subscription
 
 ### Prices
@@ -634,7 +663,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.7` |
+| Image | `olivier1246/hl-spot:1.0.8` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |
@@ -713,11 +742,11 @@ sudo systemctl start hl-spot       # start
 
 - **Update**: download the new script and run it again with **the same address as for the
   installation** (public IP address or domain name of the VPS, the one used to open the web
-  page) and the new version as second parameter. Your data is kept. Example for version 1.0.8:
+  page) and the new version as second parameter. Your data is kept. Example for version 1.0.9:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <public IP address or domain name> 1.0.8
+sudo sh install-linux.sh <public IP address or domain name> 1.0.9
 ```
 
 ### Docker

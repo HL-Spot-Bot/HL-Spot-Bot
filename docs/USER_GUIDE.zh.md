@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.7
+版本 1.0.8
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -44,15 +44,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.7-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.8-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.7-prod-linux-x64.zip
-cd HL-Spot-1.0.7-prod-linux-x64
+unzip HL-Spot-1.0.8-prod-linux-x64.zip
+cd HL-Spot-1.0.8-prod-linux-x64
 ./hl-spot
 ```
 
@@ -61,9 +61,9 @@ cd HL-Spot-1.0.7-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.7-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.7
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -118,7 +118,7 @@ docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
 | 📈 统计 | 现货和永续合约周期结果（按期间） |
 | 🧩 交易中的交易对 | 为机器人配置的现货和永续合约交易对及其设置 |
 | 🟣 永续合约周期 | 永续合约交易对的开仓、止盈、止损和平仓；**取消** 和 **关闭** 按钮 |
-| 🖐️ 手动下单 | 手动下单；之后机器人会像其他周期一样跟踪该周期 |
+| 🖐️ 手动下单 | 手动下单：现货买入或永续开仓（之后机器人会像其他周期一样跟踪该周期），现货卖出（简单订单，见 6.7 节） |
 | 🌐 Hyperliquid 交易对 | Hyperliquid 现货和永续合约交易对列表；可在此将交易对添加到机器人 |
 | ⚙️ 设置 | 全局设置（无需重启即可生效，端口和监听地址除外） |
 | 📝 日志 | 错误（以及启用后的警告） |
@@ -360,6 +360,21 @@ BULL、BEAR、RANGE 各一个区块：
 
 只有当 Hyperliquid 确认订单不再有效时，周期才会被标记为已取消。如果订单刚刚成交，取消会被拒绝，周期正常继续。这些操作无法撤销。
 
+### 6.7 手动下单：现货卖出
+
+在 **手动下单** 页面选择一个现货交易对，然后选择 **卖出**，即可卖出您持有的加密货币（例如某个已取消周期中的加密货币）。
+
+- **仅限已启用的交易对**：只能在已启用的交易对上卖出（**交易中的交易对** 页面）。买入仍可在所有交易对上进行。
+- **可用**：该加密货币在 Hyperliquid 上的余额，不含被挂单冻结的部分。
+- **机器人周期预留**：机器人周期已买入、但卖单尚未提交的加密货币。这部分不能在此卖出，以便机器人能够提交其卖单。
+- **可卖出最大值**：可用减去预留，按 Hyperliquid 接受的小数位数向下取整。**Max** 按钮会将其填入数量。已取消周期中的加密货币可以卖出。
+- **订单类型**：
+  - **限价**：按填写的价格卖出（已填入当前价格，可修改）；订单在成交前保持挂单。若价格低于当前价格，确认窗口会提示：卖出将立即成交，最低至该价格。
+  - **市价**：以当前可得的最优价格立即卖出，但不会低于当前价格减去 **滑点**（默认 1%，可修改）。在该价格下没有买家的部分会被取消；提示信息会显示已卖出的数量。
+- **预计金额**：数量 × 价格（市价单为最低金额）。Hyperliquid 拒绝低于 10 USDC 的订单。
+
+提交前会显示订单确认摘要。手动卖出是一笔 **简单订单**：不会开启周期，机器人不会跟踪它，也不计入机器人的 PNL（买入价格未知）；它会体现在仪表盘的 Hyperliquid PNL 中。尚未成交的限价单之后需在 Hyperliquid 上管理。
+
 ## 7. 许可证与订阅
 
 ### 价格
@@ -475,7 +490,7 @@ BULL、BEAR、RANGE 各一个区块：
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.7` |
+| 镜像 | `olivier1246/hl-spot:1.0.8` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
@@ -532,11 +547,11 @@ sudo systemctl stop hl-spot        # 停止（直到机器下次启动）
 sudo systemctl start hl-spot       # 启动
 ```
 
-- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.8 版本为例：
+- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.9 版本为例：
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.8
+sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.9
 ```
 
 ### Docker
