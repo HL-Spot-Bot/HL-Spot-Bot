@@ -1,6 +1,6 @@
 # HL-Spot — Guía del usuario
 
-Versión 1.0.8
+Versión 1.0.9
 
 HL-Spot es un bot de trading para **Hyperliquid**: mercados spot y perpetuos (perp), varios pares,
 órdenes automáticas y manuales. Se ejecuta **en su propio ordenador** (Windows, Linux o Docker) y
@@ -58,7 +58,7 @@ intacta.
 
 ### Windows
 
-1. Descomprima `HL-Spot-1.0.8-prod-windows-x64.zip`.
+1. Descomprima `HL-Spot-1.0.9-prod-windows-x64.zip`.
 2. En la carpeta descomprimida, ejecute **`HL-Spot.exe`**. Se abre una ventana de consola: manténgala
    abierta mientras el bot esté en funcionamiento.
 3. Abra **http://localhost:60000** en su navegador.
@@ -66,8 +66,8 @@ intacta.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 o posterior)
 
 ```
-unzip HL-Spot-1.0.8-prod-linux-x64.zip
-cd HL-Spot-1.0.8-prod-linux-x64
+unzip HL-Spot-1.0.9-prod-linux-x64.zip
+cd HL-Spot-1.0.9-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ A continuación, abra **http://localhost:60000** en su navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
 ```
 
 - `-p 60000:60000` es necesario para acceder a la página web.
@@ -661,7 +661,7 @@ Sea cual sea el tipo, puede revocar el API wallet en Hyperliquid en cualquier mo
 
 | Campo de Flux | Valor |
 |---|---|
-| Imagen | `olivier1246/hl-spot:1.0.8` |
+| Imagen | `olivier1246/hl-spot:1.0.9` |
 | Puerto y puerto del contenedor | `60000` |
 | Datos del contenedor | `g:/data` (**obligatorio**) |
 | CPU | 0,2 |
@@ -741,11 +741,11 @@ sudo systemctl start hl-spot       # iniciar
 - **Actualización**: descargue el nuevo script y vuelva a ejecutarlo con **la misma dirección
   que en la instalación** (dirección IP pública o nombre de dominio del VPS, la que abre la
   página web) y la nueva versión como segundo parámetro. Sus datos se conservan. Ejemplo para
-  la versión 1.0.9:
+  la versión 1.0.10:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <dirección IP pública o nombre de dominio> 1.0.9
+sudo sh install-linux.sh <dirección IP pública o nombre de dominio> 1.0.10
 ```
 
 ### Docker

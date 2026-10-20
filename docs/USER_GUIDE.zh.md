@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.8
+版本 1.0.9
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -44,15 +44,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.8-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.9-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.8-prod-linux-x64.zip
-cd HL-Spot-1.0.8-prod-linux-x64
+unzip HL-Spot-1.0.9-prod-linux-x64.zip
+cd HL-Spot-1.0.9-prod-linux-x64
 ./hl-spot
 ```
 
@@ -61,9 +61,9 @@ cd HL-Spot-1.0.8-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -490,7 +490,7 @@ BULL、BEAR、RANGE 各一个区块：
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.8` |
+| 镜像 | `olivier1246/hl-spot:1.0.9` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
@@ -547,11 +547,11 @@ sudo systemctl stop hl-spot        # 停止（直到机器下次启动）
 sudo systemctl start hl-spot       # 启动
 ```
 
-- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.9 版本为例：
+- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.10 版本为例：
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.9
+sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.10
 ```
 
 ### Docker

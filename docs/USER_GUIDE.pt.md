@@ -1,6 +1,6 @@
 # HL-Spot — Guia do utilizador
 
-Versão 1.0.8
+Versão 1.0.9
 
 O HL-Spot é um bot de trading para a **Hyperliquid**: mercados spot e perpétuos (perp), vários pares,
 ordens automáticas e manuais. Funciona **no seu próprio computador** (Windows, Linux ou Docker) e
@@ -58,7 +58,7 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 
 ### Windows
 
-1. Descompacte `HL-Spot-1.0.8-prod-windows-x64.zip`.
+1. Descompacte `HL-Spot-1.0.9-prod-windows-x64.zip`.
 2. Na pasta descompactada, execute **`HL-Spot.exe`**. Abre-se uma janela de consola: mantenha-a aberta enquanto
    o bot estiver a funcionar.
 3. Abra **http://localhost:60000** no seu navegador.
@@ -66,8 +66,8 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 ou mais recente)
 
 ```
-unzip HL-Spot-1.0.8-prod-linux-x64.zip
-cd HL-Spot-1.0.8-prod-linux-x64
+unzip HL-Spot-1.0.9-prod-linux-x64.zip
+cd HL-Spot-1.0.9-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Em seguida, abra **http://localhost:60000** no seu navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
 ```
 
 - `-p 60000:60000` é obrigatório para aceder à página web.
@@ -664,7 +664,7 @@ Seja qual for o tipo, pode revogar o API wallet na Hyperliquid a qualquer moment
 
 | Campo do Flux | Valor |
 |---|---|
-| Imagem | `olivier1246/hl-spot:1.0.8` |
+| Imagem | `olivier1246/hl-spot:1.0.9` |
 | Porta e porta do contentor | `60000` |
 | Dados do contentor | `g:/data` (**obrigatório**) |
 | CPU | 0,2 |
@@ -744,11 +744,11 @@ sudo systemctl start hl-spot       # iniciar
 
 - **Atualização**: descarregue o novo script e execute-o novamente com **o mesmo endereço da
   instalação** (endereço IP público ou nome de domínio do VPS, o que abre a página web) e a
-  nova versão como segundo parâmetro. Os seus dados são mantidos. Exemplo para a versão 1.0.9:
+  nova versão como segundo parâmetro. Os seus dados são mantidos. Exemplo para a versão 1.0.10:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <endereço IP público ou nome de domínio> 1.0.9
+sudo sh install-linux.sh <endereço IP público ou nome de domínio> 1.0.10
 ```
 
 ### Docker

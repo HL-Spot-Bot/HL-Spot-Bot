@@ -1,6 +1,6 @@
 # HL-Spot — Руководство пользователя
 
-Версия 1.0.8
+Версия 1.0.9
 
 HL-Spot — это торговый бот для **Hyperliquid**: spot- и бессрочные (perp) рынки, несколько пар,
 автоматические и ручные ордера. Он работает **на вашем собственном компьютере** (Windows, Linux или Docker), а
@@ -58,7 +58,7 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. Файл `.sha256` позволяе�
 
 ### Windows
 
-1. Распакуйте `HL-Spot-1.0.8-prod-windows-x64.zip`.
+1. Распакуйте `HL-Spot-1.0.9-prod-windows-x64.zip`.
 2. В распакованной папке запустите **`HL-Spot.exe`**. Откроется окно консоли: не закрывайте его, пока
    работает бот.
 3. Откройте **http://localhost:60000** в браузере.
@@ -66,8 +66,8 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. Файл `.sha256` позволяе�
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 или новее)
 
 ```
-unzip HL-Spot-1.0.8-prod-linux-x64.zip
-cd HL-Spot-1.0.8-prod-linux-x64
+unzip HL-Spot-1.0.9-prod-linux-x64.zip
+cd HL-Spot-1.0.9-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ cd HL-Spot-1.0.8-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.8-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.8
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
 ```
 
 - `-p 60000:60000` обязателен для доступа к веб-странице.
@@ -661,7 +661,7 @@ machine address>:60000`.
 
 | Поле Flux | Значение |
 |---|---|
-| Образ | `olivier1246/hl-spot:1.0.8` |
+| Образ | `olivier1246/hl-spot:1.0.9` |
 | Порт и порт контейнера | `60000` |
 | Данные контейнера | `g:/data` (**обязательно**) |
 | CPU | 0,2 |
@@ -740,11 +740,11 @@ sudo systemctl start hl-spot       # запустить
 
 - **Обновление**: скачайте новый скрипт и запустите его снова с **тем же адресом, что и при
   установке** (публичный IP-адрес или доменное имя VPS, по которому открывается веб-страница) и
-  новой версией вторым параметром. Ваши данные сохраняются. Пример для версии 1.0.9:
+  новой версией вторым параметром. Ваши данные сохраняются. Пример для версии 1.0.10:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <публичный IP-адрес или доменное имя> 1.0.9
+sudo sh install-linux.sh <публичный IP-адрес или доменное имя> 1.0.10
 ```
 
 ### Docker
