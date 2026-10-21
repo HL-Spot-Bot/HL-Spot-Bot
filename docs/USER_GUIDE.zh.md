@@ -1,6 +1,6 @@
 # HL-Spot — 用户指南
 
-版本 1.0.9
+版本 1.0.10
 
 HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永续合约（perp）市场、多个交易对、自动和手动下单。它运行**在您自己的电脑上**（Windows、Linux 或 Docker），您可以通过网页浏览器对其进行控制。
 
@@ -44,15 +44,15 @@ HL-Spot 是一款用于 **Hyperliquid** 的交易机器人：支持 spot 和永�
 
 ### Windows
 
-1. 解压 `HL-Spot-1.0.9-prod-windows-x64.zip`。
+1. 解压 `HL-Spot-1.0.10-prod-windows-x64.zip`。
 2. 在解压后的文件夹中，运行 **`HL-Spot.exe`**。会打开一个控制台窗口：在机器人运行期间请保持其打开。
 3. 在浏览器中打开 **http://localhost:60000**。
 
 ### Linux（Ubuntu 22.04、24.04、26.04、Debian 12 或更新版本）
 
 ```
-unzip HL-Spot-1.0.9-prod-linux-x64.zip
-cd HL-Spot-1.0.9-prod-linux-x64
+unzip HL-Spot-1.0.10-prod-linux-x64.zip
+cd HL-Spot-1.0.10-prod-linux-x64
 ./hl-spot
 ```
 
@@ -61,9 +61,9 @@ cd HL-Spot-1.0.9-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.10-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.10
 ```
 
 - `-p 60000:60000` 是访问网页所必需的。
@@ -114,7 +114,7 @@ docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
 
 | 页面 | 用途 |
 |---|---|
-| 📊 仪表盘 | 您的 Hyperliquid 投资组合（余额、PNL）、当前标签页交易对的实时价格，以及每个现货交易对一个标签页：其周期和市场状态；进行中的周期带有 **取消** 按钮 |
+| 📊 仪表盘 | 您的 Hyperliquid 投资组合（余额、PNL）、当前标签页交易对的实时价格和市场状态，每个现货交易对一个标签页，显示其周期和手动卖出（**手动** 标记和筛选）；进行中的周期和卖出上的 **取消** 按钮；**暂停** / **恢复** 按钮（见 6.8 节） |
 | 📈 统计 | 现货和永续合约周期结果（按期间） |
 | 🧩 交易中的交易对 | 为机器人配置的现货和永续合约交易对及其设置 |
 | 🟣 永续合约周期 | 永续合约交易对的开仓、止盈、止损和平仓；**取消** 和 **关闭** 按钮 |
@@ -360,6 +360,8 @@ BULL、BEAR、RANGE 各一个区块：
 
 只有当 Hyperliquid 确认订单不再有效时，周期才会被标记为已取消。如果订单刚刚成交，取消会被拒绝，周期正常继续。这些操作无法撤销。
 
+当前标签页交易对的 **市场状态**（BULL、BEAR 或 RANGE 及趋势）：显示在 **价格** 框中价格下方。
+
 ### 6.7 手动下单：现货卖出
 
 在 **手动下单** 页面选择一个现货交易对，然后选择 **卖出**，即可卖出您持有的加密货币（例如某个已取消周期中的加密货币）。
@@ -374,6 +376,18 @@ BULL、BEAR、RANGE 各一个区块：
 - **预计金额**：数量 × 价格（市价单为最低金额）。Hyperliquid 拒绝低于 10 USDC 的订单。
 
 提交前会显示订单确认摘要。手动卖出是一笔 **简单订单**：不会开启周期，机器人不会跟踪它，也不计入机器人的 PNL（买入价格未知）；它会体现在仪表盘的 Hyperliquid PNL 中。尚未成交的限价单之后需在 Hyperliquid 上管理。
+
+每笔手动卖出都会显示在仪表盘中其交易对的标签页里（编号 **V-…**，带 **手动** 标记）：**挂单中**、**已成交**、**部分成交** 或 **已取消**。每次机器人同步后都会在 Hyperliquid 上重新读取其状态。仍在挂单中的卖出可通过 **取消** 按钮取消（需确认）；已卖出的部分保持已卖出。使用 1.0.8 版本提交的卖出不会列出。
+
+### 6.8 暂停交易
+
+仪表盘顶部的 **暂停** 按钮（需确认）：机器人不再提交任何 **新的自动订单**（现货买入、永续开仓）。其他一切照常进行：
+
+- 跟踪已提交的订单；卖出已成交的买单；已成交永续开仓的止盈和止损；
+- 永续保护：根据交易对设置，在方向反转或方向为“none”时取消待成交的开仓并平仓；
+- 手动订单。
+
+暂停期间，每个页面顶部都会显示 **交易已暂停** 横幅及开始时间。机器人或电脑重启后暂停状态保持不变。**恢复交易**（需确认）会重新启用自动订单。若已配置 Telegram（见第 9 节），暂停和恢复时会发送 Telegram 消息。
 
 ## 7. 许可证与订阅
 
@@ -490,7 +504,7 @@ BULL、BEAR、RANGE 各一个区块：
 
 | Flux 字段 | 值 |
 |---|---|
-| 镜像 | `olivier1246/hl-spot:1.0.9` |
+| 镜像 | `olivier1246/hl-spot:1.0.10` |
 | 端口和容器端口 | `60000` |
 | 容器数据 | `g:/data`（**必填**） |
 | CPU | 0.2 |
@@ -547,11 +561,11 @@ sudo systemctl stop hl-spot        # 停止（直到机器下次启动）
 sudo systemctl start hl-spot       # 启动
 ```
 
-- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.10 版本为例：
+- **更新**：下载新脚本，使用**与安装时相同的地址**（VPS 的公网 IP 地址或域名，即打开网页时使用的地址）并以新版本号作为第二个参数再次运行。您的数据会保留。以 1.0.11 版本为例：
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.10
+sudo sh install-linux.sh <公网 IP 地址或域名> 1.0.11
 ```
 
 ### Docker

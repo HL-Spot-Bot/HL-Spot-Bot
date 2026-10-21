@@ -24,9 +24,9 @@ Download the files from the [Releases](https://github.com/HL-Spot-Bot/HL-Spot-Bo
 
 | File | System |
 |---|---|
-| `HL-Spot-1.0.9-prod-windows-x64.zip` | Windows (x86_64) |
-| `HL-Spot-1.0.9-prod-linux-x64.zip` | Linux (x86_64): Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer |
-| `HL-Spot-1.0.9-prod-docker-x64.tar.gz` | Docker image (x86_64) |
+| `HL-Spot-1.0.10-prod-windows-x64.zip` | Windows (x86_64) |
+| `HL-Spot-1.0.10-prod-linux-x64.zip` | Linux (x86_64): Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer |
+| `HL-Spot-1.0.10-prod-docker-x64.tar.gz` | Docker image (x86_64) |
 
 Each file comes with a `.sha256` file to check the download.
 
@@ -54,11 +54,11 @@ The same guide is available in the bot: menu **❓ Help** (`http://localhost:600
    - **Linux**: unzip, then run `./hl-spot` from the unzipped folder;
    - **Docker**:
      ```
-     docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
+     docker load -i HL-Spot-1.0.10-prod-docker-x64.tar.gz
      docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-            -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
+            -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.10
      ```
-   - **Flux** (decentralized cloud): image `olivier1246/hl-spot:1.0.9` — read section 16 of the
+   - **Flux** (decentralized cloud): image `olivier1246/hl-spot:1.0.10` — read section 16 of the
      user guide first (API wallet key security, required settings).
    - **VPS** (rented server, Linux or Windows): HTTPS access through the Caddy proxy, kit in the
      [`vps/`](vps/) folder (`install-linux.sh`, `docker-compose.yml`) — read section 17 of the

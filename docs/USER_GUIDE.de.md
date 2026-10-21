@@ -1,6 +1,6 @@
 # HL-Spot — Benutzerhandbuch
 
-Version 1.0.9
+Version 1.0.10
 
 HL-Spot ist ein Trading-Bot für **Hyperliquid**: spot- und Perpetual-Märkte (perp), mehrere Paare,
 automatische und manuelle Orders. Er läuft **auf Ihrem eigenen Computer** (Windows, Linux oder Docker), und Sie
@@ -58,7 +58,7 @@ unbeschädigt ist.
 
 ### Windows
 
-1. Entpacken Sie `HL-Spot-1.0.9-prod-windows-x64.zip`.
+1. Entpacken Sie `HL-Spot-1.0.10-prod-windows-x64.zip`.
 2. Starten Sie im entpackten Ordner **`HL-Spot.exe`**. Ein Konsolenfenster öffnet sich: Lassen Sie es geöffnet, solange
    der Bot läuft.
 3. Öffnen Sie **http://localhost:60000** in Ihrem Browser.
@@ -66,8 +66,8 @@ unbeschädigt ist.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 oder neuer)
 
 ```
-unzip HL-Spot-1.0.9-prod-linux-x64.zip
-cd HL-Spot-1.0.9-prod-linux-x64
+unzip HL-Spot-1.0.10-prod-linux-x64.zip
+cd HL-Spot-1.0.10-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ cd HL-Spot-1.0.9-prod-linux-x64
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.9-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.0.10-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.9
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.10
 ```
 
 - `-p 60000:60000` ist erforderlich, um die Webseite zu erreichen.
@@ -138,7 +138,7 @@ Das Menü oben bietet Zugriff auf:
 
 | Seite | Verwendung |
 |---|---|
-| 📊 Dashboard | Ihr Hyperliquid-Portfolio (Guthaben, PNL), der Live-Preis des Paares im aktiven Tab und ein Tab pro spot-Paar: seine Zyklen und sein Marktstatus; Schaltfläche **Abbrechen** bei laufenden Zyklen |
+| 📊 Dashboard | Ihr Hyperliquid-Portfolio (Guthaben, PNL), der Live-Preis und der Marktzustand des Paares im aktiven Tab, ein Tab pro Spot-Paar mit seinen Zyklen und manuellen Verkäufen (Markierung und Filter **Manuell**); Schaltfläche **Abbrechen** bei laufenden Zyklen und Verkäufen; Schaltfläche **Pause** / **Fortsetzen** (Abschnitt 6.8) |
 | 📈 Statistiken | Ergebnisse der spot- und perp-Zyklen nach Zeitraum |
 | 🧩 Gehandelte Paare | Für den Bot konfigurierte spot- und perp-Paare und ihre Einstellungen |
 | 🟣 Perp-Zyklen | Einstiege, Take-Profits, Stop-Losses und Schließungen der perp-Paare; Schaltflächen **Abbrechen** und **Schließen** |
@@ -478,6 +478,8 @@ Ein Zyklus wird erst als storniert markiert, wenn Hyperliquid bestätigt, dass d
 mehr aktiv ist. Wurde die Order gerade ausgeführt, wird die Stornierung abgelehnt und der Zyklus
 läuft normal weiter. Diese Aktionen können nicht rückgängig gemacht werden.
 
+**Marktzustand** des Paares im aktiven Tab (BULL, BEAR oder RANGE und Trend): im Bereich **Preis** unter dem Preis angezeigt.
+
 ### 6.7 Manuelle Orders: Spot-Verkauf
 
 Wählen Sie auf der Seite **Manuelle Orders** ein Spot-Paar und dann **Verkauf**, um Kryptos zu
@@ -507,6 +509,29 @@ Eine Bestätigung fasst die Order vor dem Senden zusammen. Ein manueller Verkauf
 **einfache Order**: Er eröffnet keinen Zyklus, der Bot verfolgt ihn nicht und er zählt nicht
 zum PNL des Bots (Kaufpreis unbekannt); er erscheint im Hyperliquid-PNL des Dashboards. Eine
 noch nicht ausgeführte Limit-Order wird danach auf Hyperliquid verwaltet.
+
+Jeder manuelle Verkauf erscheint im Dashboard im Tab seines Paares (Nummer **V-…**,
+Markierung **Manuell**): **offen**, **ausgeführt**, **teilweise ausgeführt** oder
+**storniert**. Sein Zustand wird nach jeder Synchronisierung des Bots erneut auf Hyperliquid
+gelesen. Ein noch offener Verkauf kann mit der Schaltfläche **Abbrechen** (nach Bestätigung)
+storniert werden; der bereits verkaufte Teil bleibt verkauft. Mit Version 1.0.8 getätigte
+Verkäufe werden nicht aufgeführt.
+
+### 6.8 Trading pausieren
+
+Schaltfläche **Pause** oben im Dashboard (nach Bestätigung): Der Bot platziert keine **neue
+automatische Order** mehr (Spot-Käufe, Perp-Einstiege). Alles andere läuft weiter:
+
+- Verfolgung bereits platzierter Orders; Verkauf ausgeführter Käufe; Take-Profit und Stop-Loss
+  ausgeführter Perp-Einstiege;
+- Perp-Schutzmaßnahmen: Stornierung wartender Einstiege und Schließen von Positionen bei einer
+  Umkehr oder der Richtung „none“, gemäß den Einstellungen des Paares;
+- manuelle Orders.
+
+Während der Pause wird oben auf jeder Seite ein Banner **Trading pausiert** mit der Startzeit
+angezeigt. Die Pause bleibt bei einem Neustart des Bots oder des Rechners erhalten. **Trading
+fortsetzen** (nach Bestätigung) startet die automatischen Orders wieder. Beim Pausieren und
+Fortsetzen wird eine Telegram-Nachricht gesendet, wenn Telegram eingerichtet ist (Abschnitt 9).
 
 ## 7. Lizenz und Abonnement
 
@@ -668,7 +693,7 @@ Unabhängig vom Typ können Sie das API-Wallet jederzeit auf Hyperliquid widerru
 
 | Flux-Feld | Wert |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.9` |
+| Image | `olivier1246/hl-spot:1.0.10` |
 | Port und Container-Port | `60000` |
 | Container-Daten | `g:/data` (**erforderlich**) |
 | CPU | 0,2 |
@@ -751,11 +776,11 @@ sudo systemctl start hl-spot       # starten
 - **Update**: Laden Sie das neue Skript herunter und führen Sie es erneut aus, mit **derselben
   Adresse wie bei der Installation** (öffentliche IP-Adresse oder Domainname des VPS, über die
   die Weboberfläche geöffnet wird) und der neuen Version als zweitem Parameter. Ihre Daten
-  bleiben erhalten. Beispiel für Version 1.0.10:
+  bleiben erhalten. Beispiel für Version 1.0.11:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <öffentliche IP-Adresse oder Domainname> 1.0.10
+sudo sh install-linux.sh <öffentliche IP-Adresse oder Domainname> 1.0.11
 ```
 
 ### Docker
