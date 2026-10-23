@@ -1,6 +1,6 @@
 # HL-Spot — Guía del usuario
 
-Versión 1.0.10
+Versión 1.1.0
 
 HL-Spot es un bot de trading para **Hyperliquid**: mercados spot y perpetuos (perp), varios pares,
 órdenes automáticas y manuales. Se ejecuta **en su propio ordenador** (Windows, Linux o Docker) y
@@ -58,7 +58,7 @@ intacta.
 
 ### Windows
 
-1. Descomprima `HL-Spot-1.0.10-prod-windows-x64.zip`.
+1. Descomprima `HL-Spot-1.1.0-prod-windows-x64.zip`.
 2. En la carpeta descomprimida, ejecute **`HL-Spot.exe`**. Se abre una ventana de consola: manténgala
    abierta mientras el bot esté en funcionamiento.
 3. Abra **http://localhost:60000** en su navegador.
@@ -66,8 +66,8 @@ intacta.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 o posterior)
 
 ```
-unzip HL-Spot-1.0.10-prod-linux-x64.zip
-cd HL-Spot-1.0.10-prod-linux-x64
+unzip HL-Spot-1.1.0-prod-linux-x64.zip
+cd HL-Spot-1.1.0-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ A continuación, abra **http://localhost:60000** en su navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.10-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.1.0-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.10
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.1.0
 ```
 
 - `-p 60000:60000` es necesario para acceder a la página web.
@@ -560,6 +560,19 @@ Los tokens y las redes disponibles son los que se muestran en la página Licenci
 - un pago que no respete estas reglas (dirección desconocida, importe diferente, otra
   red, fuera del periodo de validez) **se pierde: sin reembolso**.
 
+### Derecho de desistimiento y confirmación del pago
+
+Antes de solicitar un importe, marque la casilla: pide que su pago se aplique a su licencia en
+cuanto se reconozca (el periodo pagado se añade al final de su licencia actual) y reconoce que
+de este modo pierde su derecho de desistimiento. La casilla debe marcarse de nuevo para cada
+importe.
+Sin esta casilla no se da ningún importe. El servidor de licencias registra su consentimiento
+junto con el importe.
+
+En **Últimos pagos reconocidos**, cada pago acreditado tiene un botón **Confirmación de
+pago**: descarga un archivo de texto con la suscripción, el importe, la transacción, el
+periodo de licencia y su renuncia al derecho de desistimiento. Consérvelo.
+
 ### Pagar en BTC
 
 Antes de su primer pago en BTC, declare su **dirección BTC** en la página Licencia (prueba mediante
@@ -685,7 +698,7 @@ Sea cual sea el tipo, puede revocar el API wallet en Hyperliquid en cualquier mo
 
 | Campo de Flux | Valor |
 |---|---|
-| Imagen | `olivier1246/hl-spot:1.0.10` |
+| Imagen | `olivier1246/hl-spot:1.1.0` |
 | Puerto y puerto del contenedor | `60000` |
 | Datos del contenedor | `g:/data` (**obligatorio**) |
 | CPU | 0,2 |
@@ -765,11 +778,11 @@ sudo systemctl start hl-spot       # iniciar
 - **Actualización**: descargue el nuevo script y vuelva a ejecutarlo con **la misma dirección
   que en la instalación** (dirección IP pública o nombre de dominio del VPS, la que abre la
   página web) y la nueva versión como segundo parámetro. Sus datos se conservan. Ejemplo para
-  la versión 1.0.11:
+  la versión 1.1.1:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <dirección IP pública o nombre de dominio> 1.0.11
+sudo sh install-linux.sh <dirección IP pública o nombre de dominio> 1.1.1
 ```
 
 ### Docker

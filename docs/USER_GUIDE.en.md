@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.0.10
+Version 1.1.0
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -58,7 +58,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.0.10-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.1.0-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -66,8 +66,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.0.10-prod-linux-x64.zip
-cd HL-Spot-1.0.10-prod-linux-x64
+unzip HL-Spot-1.1.0-prod-linux-x64.zip
+cd HL-Spot-1.1.0-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.0.10-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.1.0-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.0.10
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.1.0
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -564,6 +564,18 @@ The tokens and networks offered are those shown on the License page.
 - a payment that does not follow these rules (unknown address, different amount, other
   network, after the validity) **is lost: no refund**.
 
+### Right of withdrawal and payment confirmation
+
+Before requesting an amount, tick the box: you ask for your payment to be applied to your
+license as soon as it is recognized (the period paid is added to the end of your current
+license), and you acknowledge that you thereby lose your right of withdrawal. The box must be
+ticked again for each amount. Without this box, no amount is given. Your agreement is recorded by the license
+server with the amount.
+
+Under **Latest recognized payments**, each credited payment has a **Payment confirmation**
+button: it downloads a text file with the subscription, the amount, the transaction, the
+license period and your waiver of the right of withdrawal. Keep it.
+
 ### Paying in BTC
 
 Before your first BTC payment, declare your **BTC address** on the License page (proof by a
@@ -687,7 +699,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.0.10` |
+| Image | `olivier1246/hl-spot:1.1.0` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |
@@ -766,11 +778,11 @@ sudo systemctl start hl-spot       # start
 
 - **Update**: download the new script and run it again with **the same address as for the
   installation** (public IP address or domain name of the VPS, the one used to open the web
-  page) and the new version as second parameter. Your data is kept. Example for version 1.0.11:
+  page) and the new version as second parameter. Your data is kept. Example for version 1.1.1:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <public IP address or domain name> 1.0.11
+sudo sh install-linux.sh <public IP address or domain name> 1.1.1
 ```
 
 ### Docker
