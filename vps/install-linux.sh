@@ -11,14 +11,15 @@
 # What the script does:
 #   1. system packages (curl, unzip, ufw...) and Caddy (official repository);
 #   2. system user "hlspot", program in /opt/hl-spot, data in /var/lib/hl-spot (hlspot only);
-#   3. download of the version from GitHub and check of its SHA-256 checksum;
+#   3. download of the version from GitHub and check of its SHA-256 checksum
+#      (and of its GPG signature for the versions after 1.1.1);
 #   4. first-launch code (HL_SPOT_SETUP_CODE) created on the first run, kept afterwards;
 #   5. systemd service "hl-spot" (automatic start);
 #   6. Caddy: HTTPS on the IP address ("shortlived" certificate) or on the domain name;
 #   7. ufw firewall: SSH port(s), 80 and 443 only - the bot's port (60000) stays closed.
 set -eu
 
-VERSION_DEFAULT=1.1.1
+VERSION_DEFAULT=1.2.0
 REPO=https://github.com/HL-Spot-Bot/HL-Spot-Bot
 SITE="${1:-}"
 VERSION="${2:-$VERSION_DEFAULT}"
@@ -26,12 +27,27 @@ PROG=/opt/hl-spot
 DATA=/var/lib/hl-spot
 ETC=/etc/hl-spot
 KIT="$(cd "$(dirname "$0")" && pwd)"
+# audit 2026-11-11 (F10): releases signed with GPG after this version (older ones: SHA-256 only)
+LAST_UNSIGNED=1.1.1
+SIGNING_FINGERPRINT=CDC1DF55968BD2947FE449642E3853B17F451F51
+SIGNING_KEY='-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEavQ3gBYJKwYBBAHaRw8BAQdAXk0WsKPU9Bs5V1fXxUU/kEmYyCnLNYr2luJn
+QM0TGn60H0hMLVNwb3QgQm90IDxITC1zcG90QGNtYWlscy5ldT6IrwQTFgoAVxYh
+BM3B31WWi9KUf+RJZC44U7F/RR9RBQJq9DeAGxSAAAAAAAQADm1hbnUyLDIuNSsx
+LjEyLDIsMQIbAwULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCRAuOFOxf0Uf
+Ue1xAP4/TBo8wKDjFE5MUZUQK5Tdh+mFxNs1n15oL4osp0AdoAEA3IOpeXvqDdBq
+UZumcpUgF6dz64dKB33dPzEHYzAhlgA=
+=eb5Y
+-----END PGP PUBLIC KEY BLOCK-----'
 
 usage() {
     echo "usage: sudo sh install-linux.sh <public-IP-address | domain-name> [version]"
     exit 1
 }
 die() { echo "ERROR: $*" >&2; exit 1; }
+# true if version $1 is newer than version $2
+version_after() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n 1)" = "$1" ]; }
 
 [ -n "$SITE" ] || usage
 [ "$(id -u)" = 0 ] || die "run as root (sudo)"
@@ -78,7 +94,7 @@ fi
 
 echo "== 1. System packages"
 apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get -y install curl unzip ufw ca-certificates gpg \
+DEBIAN_FRONTEND=noninteractive apt-get -y install curl unzip ufw ca-certificates gpg gpgv \
     debian-keyring debian-archive-keyring apt-transport-https
 
 echo "== 2. Caddy (official repository: a recent version is needed for the IP certificate)"
@@ -99,13 +115,25 @@ chown hlspot:hlspot "$DATA"
 chmod 700 "$DATA"
 chmod 755 "$ETC"
 
-echo "== 4. Download of HL-Spot $VERSION (GitHub) and SHA-256 check"
+echo "== 4. Download of HL-Spot $VERSION (GitHub), SHA-256 and signature check"
 NAME="HL-Spot-$VERSION-prod-linux-x64"
 if [ ! -x "$PROG/$NAME/hl-spot" ]; then
     TMP="$(mktemp -d)"
     curl -fL --retry 3 -o "$TMP/$NAME.zip" "$REPO/releases/download/v$VERSION/$NAME.zip"
     curl -fL --retry 3 -o "$TMP/$NAME.zip.sha256" "$REPO/releases/download/v$VERSION/$NAME.zip.sha256"
     (cd "$TMP" && sha256sum -c "$NAME.zip.sha256") || die "wrong SHA-256 checksum: file refused"
+    if version_after "$VERSION" "$LAST_UNSIGNED"; then
+        curl -fL --retry 3 -o "$TMP/$NAME.zip.asc" "$REPO/releases/download/v$VERSION/$NAME.zip.asc" \
+            || die "signature file not found: $NAME.zip.asc"
+        mkdir -m 700 "$TMP/gnupg"
+        printf '%s\n' "$SIGNING_KEY" | GNUPGHOME="$TMP/gnupg" gpg --batch --dearmor > "$TMP/release-key.gpg" \
+            || die "signing key unreadable"
+        GNUPGHOME="$TMP/gnupg" gpgv --status-fd 1 --keyring "$TMP/release-key.gpg" \
+            "$TMP/$NAME.zip.asc" "$TMP/$NAME.zip" 2>/dev/null \
+            | grep -q "^\[GNUPG:\] VALIDSIG $SIGNING_FINGERPRINT " \
+            || die "wrong GPG signature: file refused"
+        echo "GPG signature OK (key $SIGNING_FINGERPRINT)"
+    fi
     unzip -oq "$TMP/$NAME.zip" -d "$PROG"
     rm -rf "$TMP"
     chown -R root:root "$PROG/$NAME"
