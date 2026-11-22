@@ -1,6 +1,6 @@
 # HL-Spot — Guia do utilizador
 
-Versão 1.2.0
+Versão 1.2.1
 
 O HL-Spot é um bot de trading para a **Hyperliquid**: mercados spot e perpétuos (perp), vários pares,
 ordens automáticas e manuais. Funciona **no seu próprio computador** (Windows, Linux ou Docker) e
@@ -58,7 +58,7 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 
 ### Windows
 
-1. Descompacte `HL-Spot-1.2.0-prod-windows-x64.zip`.
+1. Descompacte `HL-Spot-1.2.1-prod-windows-x64.zip`.
 2. Na pasta descompactada, execute **`HL-Spot.exe`**. Abre-se uma janela de consola: mantenha-a aberta enquanto
    o bot estiver a funcionar.
 3. Abra **http://localhost:60000** no seu navegador.
@@ -66,8 +66,8 @@ https://github.com/HL-Spot-Bot/HL-Spot-Bot. O ficheiro `.sha256` permite verific
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 ou mais recente)
 
 ```
-unzip HL-Spot-1.2.0-prod-linux-x64.zip
-cd HL-Spot-1.2.0-prod-linux-x64
+unzip HL-Spot-1.2.1-prod-linux-x64.zip
+cd HL-Spot-1.2.1-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Em seguida, abra **http://localhost:60000** no seu navegador.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.2.0-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.2.1-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.2.0
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.2.1
 ```
 
 - `-p 60000:60000` é obrigatório para aceder à página web.
@@ -615,6 +615,10 @@ Em **Configurações → Notificações Telegram**:
 3. introduza o token e o chat ID e, em seguida, ative as notificações e escolha as mensagens
    (ordens colocadas, compras executadas, ciclos concluídos, erros, resumo diário).
 
+As ordens que o bot não conseguiu colocar por falta de saldo ou de margem suficientes (montante
+fixo, percentagem do saldo, margem perp, recusa da Hyperliquid) não são enviadas pelo Telegram:
+continuam visíveis no Log (secção 12).
+
 ## 10. Utilizar o HL-Spot noutro computador
 
 Instale o bot no novo computador e escolha **Já tenho uma conta** na primeira
@@ -643,6 +647,8 @@ Página **Licença**, **🗑️ Excluir minha conta**: senha + assinatura da sua
   histórico de trading é mantido.
 
 ## 14. Atualizações e cópia de segurança
+
+A versão instalada é mostrada por baixo do nome **HL-Spot**, no canto superior esquerdo de cada página.
 
 Quando é publicada uma nova versão, o bot indica-o com uma faixa no topo de todas as páginas
 (verificação no arranque e depois a cada 6 horas):
@@ -700,7 +706,7 @@ Seja qual for o tipo, pode revogar o API wallet na Hyperliquid a qualquer moment
 
 | Campo do Flux | Valor |
 |---|---|
-| Imagem | `olivier1246/hl-spot:1.2.0` |
+| Imagem | `olivier1246/hl-spot:1.2.1` |
 | Porta e porta do contentor | `60000` |
 | Dados do contentor | `g:/data` (**obrigatório**) |
 | CPU | 0,2 |
@@ -780,11 +786,11 @@ sudo systemctl start hl-spot       # iniciar
 
 - **Atualização**: descarregue o novo script e execute-o novamente com **o mesmo endereço da
   instalação** (endereço IP público ou nome de domínio do VPS, o que abre a página web) e a
-  nova versão como segundo parâmetro. Os seus dados são mantidos. Exemplo para a versão 1.2.0:
+  nova versão como segundo parâmetro. Os seus dados são mantidos. Exemplo para a versão 1.2.1:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <endereço IP público ou nome de domínio> 1.2.0
+sudo sh install-linux.sh <endereço IP público ou nome de domínio> 1.2.1
 ```
 
 ### Docker

@@ -1,6 +1,6 @@
 # HL-Spot — User guide
 
-Version 1.2.0
+Version 1.2.1
 
 HL-Spot is a trading bot for **Hyperliquid**: spot and perpetual (perp) markets, several pairs,
 automatic and manual orders. It runs **on your own computer** (Windows, Linux or Docker) and you
@@ -58,7 +58,7 @@ intact.
 
 ### Windows
 
-1. Unzip `HL-Spot-1.2.0-prod-windows-x64.zip`.
+1. Unzip `HL-Spot-1.2.1-prod-windows-x64.zip`.
 2. In the unzipped folder, run **`HL-Spot.exe`**. A console window opens: keep it open while
    the bot runs.
 3. Open **http://localhost:60000** in your browser.
@@ -66,8 +66,8 @@ intact.
 ### Linux (Ubuntu 22.04, 24.04, 26.04, Debian 12 or newer)
 
 ```
-unzip HL-Spot-1.2.0-prod-linux-x64.zip
-cd HL-Spot-1.2.0-prod-linux-x64
+unzip HL-Spot-1.2.1-prod-linux-x64.zip
+cd HL-Spot-1.2.1-prod-linux-x64
 ./hl-spot
 ```
 
@@ -76,9 +76,9 @@ Then open **http://localhost:60000** in your browser.
 ### Docker
 
 ```
-docker load -i HL-Spot-1.2.0-prod-docker-x64.tar.gz
+docker load -i HL-Spot-1.2.1-prod-docker-x64.tar.gz
 docker run -d --name hl-spot --restart unless-stopped -p 60000:60000 \
-       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.2.0
+       -e TZ=Europe/Paris -v hl-spot-data:/data hl-spot:1.2.1
 ```
 
 - `-p 60000:60000` is required to reach the web page.
@@ -614,6 +614,10 @@ In **Settings → Telegram notifications**:
 3. enter the token and the chat ID, then enable notifications and choose the messages
    (orders placed, buys filled, completed cycles, errors, daily summary).
 
+Orders the bot could not place for lack of balance or margin (fixed amount, percentage of the
+balance, perp margin, refusal by Hyperliquid) are not sent by Telegram: they stay visible in the
+Log (section 12).
+
 ## 10. Using HL-Spot on another computer
 
 Install the bot on the new computer and choose **I already have an account** at first
@@ -643,6 +647,8 @@ it.
   trading history is kept.
 
 ## 14. Updates and backup
+
+The installed version is shown under the name **HL-Spot**, at the top left of every page.
 
 When a new version is published, the bot shows a banner at the top of every page (check at
 start-up, then every 6 hours):
@@ -699,7 +705,7 @@ Whatever the type, you can revoke the API wallet on Hyperliquid at any time (sec
 
 | Flux field | Value |
 |---|---|
-| Image | `olivier1246/hl-spot:1.2.0` |
+| Image | `olivier1246/hl-spot:1.2.1` |
 | Port and container port | `60000` |
 | Container data | `g:/data` (**required**) |
 | CPU | 0.2 |
@@ -778,11 +784,11 @@ sudo systemctl start hl-spot       # start
 
 - **Update**: download the new script and run it again with **the same address as for the
   installation** (public IP address or domain name of the VPS, the one used to open the web
-  page) and the new version as second parameter. Your data is kept. Example for version 1.2.0:
+  page) and the new version as second parameter. Your data is kept. Example for version 1.2.1:
 
 ```
 curl -fLO https://raw.githubusercontent.com/HL-Spot-Bot/HL-Spot-Bot/main/vps/install-linux.sh
-sudo sh install-linux.sh <public IP address or domain name> 1.2.0
+sudo sh install-linux.sh <public IP address or domain name> 1.2.1
 ```
 
 ### Docker
